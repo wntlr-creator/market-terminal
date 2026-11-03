@@ -371,6 +371,12 @@ def build_data(prev=None):
             news += google_news(kw)
         except Exception as e:  # noqa: BLE001
             log("구글 뉴스 실패", kw, e)
+    # 한눈에 카드용: 버핏·트럼프 관련 뉴스 (홈 시장 뉴스와 섞이지 않게 kind="ez")
+    for tag, kw in (("트럼프", "트럼프 증시"), ("트럼프", "트럼프 관세"), ("버핏", "워런 버핏 버크셔")):
+        try:
+            news += [{**n, "tag": tag, "kind": "ez"} for n in google_news(kw, n=5, days=3)]
+        except Exception as e:  # noqa: BLE001
+            log("구글 뉴스 실패", kw, e)
     for w in CONFIG["watchlist"]:
         news += stock_news(w["sym"], w["name"], CONFIG.get("news_per_ticker", 5))
     seen, uniq = set(), []

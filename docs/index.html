@@ -367,6 +367,30 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
 .op-items li b{font-weight:600} .op-items li span{color:var(--muted)}
 .op-items .dotc{margin-top:4px}
 .op-acts{display:flex;gap:8px;flex-wrap:wrap}
+.ez-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,290px);gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+@media (max-width:640px){.ez-row{grid-auto-columns:84%}}
+.ez-card{scroll-snap-align:start;border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:var(--panel-2);display:flex;flex-direction:column;gap:9px;min-height:210px}
+.ez-k{font-size:12.5px;color:var(--muted);font-weight:600}
+.ez-h{font-size:17px;font-weight:800;line-height:1.4;word-break:keep-all}
+.ez-h .up,.ez-list .up{color:var(--up)} .ez-h .down,.ez-list .down{color:var(--down)}
+.ez-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ez-chips span{font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+.ez-list{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.ez-list li{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:13.5px}
+.ez-list li small{grid-column:1/-1;color:var(--muted);font-size:11.5px}
+.ez-list li b{font-family:var(--font-num)}
+.ez-bars{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ez-bars li{display:grid;grid-template-columns:96px 1fr 44px;gap:8px;align-items:center;font-size:12.5px}
+.ez-bars li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ez-bars i{display:block;height:8px;border-radius:4px;background:var(--accent)}
+.ez-bars b{font-family:var(--font-num);text-align:right;font-weight:600}
+.ez-big{font-family:var(--font-num);font-size:26px;font-weight:800}
+.ez-p{margin:0;font-size:13px;line-height:1.55} .ez-p.muted{color:var(--muted);font-size:12px}
+.ez-news{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ez-news li{display:flex;gap:7px;align-items:baseline;font-size:13px;line-height:1.4}
+.ez-news a{color:var(--fg);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ez-foot{margin-top:auto;font-size:11px;color:var(--dim);line-height:1.4}
+.ez-go{align-self:flex-start;background:none;border:0;padding:0;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer}
 .tone{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap;flex:none}
 .tone.good{background:var(--up-bg);color:var(--up)} .tone.bad{background:var(--down-bg);color:var(--down)} .tone.neutral{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
 .tone.rule{opacity:.85}
@@ -619,6 +643,13 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
   <section class="panel home-only" aria-labelledby="h-board">
     <div class="ph"><h2 id="h-board">시장 시세판</h2><div class="tabs" role="tablist" id="boardTabs"></div></div>
     <div class="pb"><div class="cards" id="cards"></div></div>
+  </section>
+
+  <section class="panel home-only" aria-labelledby="h-ez" id="ezPanel" hidden>
+    <div class="ph"><h2 id="h-ez">한눈에 보는 버핏 · 트럼프</h2>
+      <div class="seg" id="ezSeg"><button type="button" data-ez="buffett" aria-pressed="true">버핏</button><button type="button" data-ez="trump" aria-pressed="false">트럼프</button></div>
+    </div>
+    <div class="pb"><div class="ez-row" id="ezRow"></div><p class="hint" id="ezHint" style="margin:6px 0 0">옆으로 넘겨 보세요 →</p></div>
   </section>
 
   <div class="split">
@@ -2281,7 +2312,7 @@ ${JSON.stringify(need)}`;
       if (!r.ok) throw new Error(r.status);
       PF = await r.json();
       PF.investors = PF.investors || {};
-      renderPfStrip();
+      renderPfStrip(); renderEz();
       if (S.view === "portfolio") renderPf();
     } catch (e) {
       if (!PF) $("#pfPanel").innerHTML = `<p class="empty">포트폴리오 데이터 파일(portfolios.json)을 찾지 못했어요. <span class="num">python fetch_portfolios.py</span>를 실행해 주세요.</p>`;
@@ -2296,6 +2327,91 @@ ${JSON.stringify(need)}`;
   });
   const fromHash = () => { const h = location.hash.slice(1); if (h === "portfolio") setView("portfolio"); else if (PF_IDS.includes(h)) setView("portfolio", h); };
   window.addEventListener("hashchange", fromHash);
+
+  /* ================= 한눈에: 버핏·트럼프 카드 (공시 데이터를 쉬운 말로) ================= */
+  const EZ_KO = { AAPL: "애플", AXP: "아메리칸 익스프레스", KO: "코카콜라", GOOGL: "알파벳(구글)", GOOG: "알파벳(구글) C", BAC: "뱅크오브아메리카", CVX: "셰브론", OXY: "옥시덴탈",
+    CB: "처브(보험)", MCO: "무디스(신용평가)", KHC: "크래프트 하인즈", DVA: "다비타(투석 병원)", DAL: "델타항공", SIRI: "시리우스XM(라디오)", VRSN: "베리사인(인터넷 주소)",
+    KR: "크로거(마트)", ALLY: "앨리 파이낸셜", LEN: "레나(주택 건설)", "LEN-B": "레나 B(주택 건설)", LLYVK: "리버티 라이브", LLYVA: "리버티 라이브 A", NYT: "뉴욕타임스",
+    COF: "캐피털원(카드)", LPX: "루이지애나퍼시픽(목재)", NUE: "뉴코어(철강)", M: "메이시스(백화점)", NVR: "NVR(주택 건설)", JEF: "제프리스(증권)", DHI: "DR호튼(주택 건설)",
+    STZ: "컨스텔레이션(주류)", META: "메타", T: "AT&T", NFLX: "넷플릭스", COP: "코노코필립스", AMD: "AMD", CHD: "처치앤드와이트", NVDA: "엔비디아", BA: "보잉",
+    HD: "홈디포", TMUS: "T모바일", DDOG: "데이터독", DELL: "델", PANW: "팔로알토 네트웍스", MSFT: "마이크로소프트", AMZN: "아마존", TSLA: "테슬라" };
+  const EZ_THEME = { LEN: "주택 건설", "LEN-B": "주택 건설", DHI: "주택 건설", NVR: "주택 건설", LPX: "주택 건설",
+    BAC: "은행·카드", COF: "은행·카드", ALLY: "은행·카드", AXP: "은행·카드", JEF: "증권·금융", MCO: "증권·금융", CB: "보험",
+    AAPL: "빅테크", GOOGL: "빅테크", GOOG: "빅테크", VRSN: "빅테크", CVX: "에너지", OXY: "에너지", NUE: "철강",
+    KO: "소비재", KHC: "소비재", KR: "유통", M: "유통", STZ: "소비재", DAL: "항공", DVA: "헬스케어", NYT: "미디어", SIRI: "미디어", LLYVK: "미디어", LLYVA: "미디어" };
+  const ezName = (sym, fb) => EZ_KO[sym] || fb || sym;
+  // 받침에 맞춰 조사 고르기 (을/를, 은/는). 괄호 설명은 빼고 마지막 글자로 판단
+  const josa = (w, a, b) => { const t = String(w).replace(/\s*\([^)]*\)\s*$/, "").trim(), c = t.charCodeAt(t.length - 1);
+    if (c >= 0xac00 && c <= 0xd7a3) return w + ((c - 0xac00) % 28 ? a : b);
+    return w + (/[lmnr136780]$/i.test(t) ? a : b); };
+  const usdKo = n => n == null || !isFinite(n) ? "–" : n >= 1e8 ? `$${n >= 1e9 ? Math.round(n / 1e8).toLocaleString() : (n / 1e8).toFixed(1)}억` : `$${Math.round(n / 1e4).toLocaleString()}만`;
+  const ezAmt = a => { const m = String(a || "").match(/\$([\d,]+)\s*-\s*\$([\d,]+)/); return m ? +m[2].replace(/,/g, "") : 0; };
+  let EZ_TAB = (() => { try { return localStorage.getItem("mt-ez") || "buffett"; } catch { return "buffett"; } })();
+  function ezCard(k, h, body, foot, go){
+    return `<article class="ez-card"><div class="ez-k">${k}</div><div class="ez-h">${h}</div>${body}${foot ? `<div class="ez-foot">${foot}</div>` : ""}${go ? `<button type="button" class="ez-go" data-ez-go="${go}">자세히 보기 →</button>` : ""}</article>`;
+  }
+  function ezBuffett(v, meta){
+    const H = v.holdings || [];
+    const dv = h => h.change === "new" ? h.value : h.prevShares ? (h.shares - h.prevShares) * (h.value / (h.shares || 1)) : 0;
+    const adds = H.filter(h => ["add", "new"].includes(h.change)).map(h => ({ ...h, dv: dv(h) })).sort((a, b) => b.dv - a.dv);
+    const trims = H.filter(h => h.change === "trim").map(h => ({ ...h, dv: dv(h) })).sort((a, b) => a.dv - b.dv);
+    const sold = v.sold || [];
+    // 업종별로 묶어서 '무엇을 늘리고 무엇을 줄였는지' 한 문장
+    const th = {}; [...adds, ...trims].forEach(h => { const t = EZ_THEME[h.sym]; if (t) th[t] = (th[t] || 0) + h.dv; });
+    sold.forEach(h => { const t = EZ_THEME[h.sym]; if (t) th[t] = (th[t] || 0) - (h.prevValue || 0); });
+    const up = Object.entries(th).filter(([, x]) => x > 0).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+    const dn = Object.entries(th).filter(([, x]) => x < 0).sort((a, b) => a[1] - b[1]).slice(0, 2).map(x => x[0]);
+    const line = up.length || dn.length ? `${up.length ? `<b class="up">${josa(up.join("·"), "은", "는")}</b> 늘리고` : ""}${up.length && dn.length ? ", " : ""}${dn.length ? `<b class="down">${josa(dn.join("·"), "은", "는")}</b> 줄였어요` : "어요"}` : "큰 변화 없이 그대로 들고 있어요";
+    const c = v.counts || {}, q = (v.period || "").slice(0, 7);
+    const qName = q ? `${q.slice(0, 4)}년 ${Math.ceil(+q.slice(5, 7) / 3)}분기` : "";
+    const foot = `${qName} 말 기준 · ${v.filed || ""} 공개 (3개월쯤 늦게 공개돼요)`;
+    const li = (arr, f) => `<ul class="ez-list">${arr.map(f).join("")}</ul>`;
+    const top = H.slice().sort((a, b) => b.weight - a.weight).slice(0, 5), mx = top[0]?.weight || 1;
+    const dd = meta?.next13F ? Math.ceil((Date.parse(meta.next13F) - Date.parse(kstDay(Date.now()))) / 864e5) : null;
+    return [
+      ezCard("🧓 쉽게 말하면", `버핏은 이번에 ${line}.`,
+        `<div class="ez-chips"><span>새로 산 <b>${c.new || 0}</b></span><span>더 산 <b>${c.add || 0}</b></span><span>줄인 <b>${c.trim || 0}</b></span><span>다 판 <b>${c.sold || 0}</b></span></div>`, foot, "buffett"),
+      adds.length ? ezCard("🟢 가장 많이 더 산 종목", `${esc(josa(ezName(adds[0].sym, adds[0].name), "을", "를"))} ${adds[0].change === "new" ? "새로 샀어요" : "가장 많이 늘렸어요"}`,
+        li(adds.slice(0, 3), h => `<li><span>${esc(ezName(h.sym, h.name))}</span><b class="up">${h.change === "new" ? "신규" : "+" + Math.round(h.chgPct) + "%"}</b><small>${usdKo(h.dv)} 어치</small></li>`), "주식 수 기준 변화 · 금액은 보고서 시점 가격으로 계산", "buffett") : "",
+      trims.length || sold.length ? ezCard("🔴 가장 많이 판 종목", `${esc(josa(ezName((trims[0] || sold[0]).sym, (trims[0] || sold[0]).name), "을", "를"))} ${trims[0] ? "가장 많이 줄였어요" : "다 팔았어요"}`,
+        li([...trims.slice(0, 3).map(h => ({ n: ezName(h.sym, h.name), p: Math.round(h.chgPct) + "%", m: usdKo(-h.dv) })), ...sold.slice(0, 1).map(h => ({ n: ezName(h.sym, h.name), p: "전량", m: usdKo(h.prevValue) }))],
+          x => `<li><span>${esc(x.n)}</span><b class="down">${esc(x.p)}</b><small>${x.m} 어치</small></li>`), "", "buffett") : "",
+      ezCard("👜 버핏 주머니 TOP 5", `상위 5개가 전체의 ${Math.round(top.reduce((a, h) => a + h.weight, 0))}%예요`,
+        `<ul class="ez-bars">${top.map(h => `<li><span>${esc(ezName(h.sym, h.name))}</span><i style="width:${(h.weight / mx * 100).toFixed(0)}%"></i><b>${h.weight.toFixed(1)}%</b></li>`).join("")}</ul>`, `총 ${usdKo(v.totalValue)} · ${v.count || H.length}종목`, "buffett"),
+      dd != null ? ezCard("📅 다음 공개", dd > 0 ? `다음 보고서는 <b>D-${dd}</b>` : "다음 보고서가 곧 나와요", `<div class="ez-big">${esc(meta.next13F)}</div><p class="ez-p">미국 큰손들은 분기마다 45일 안에 보유 주식을 공개해야 해요. 공개되면 이 카드가 자동으로 바뀌어요.</p>`, "", "") : "",
+    ].join("");
+  }
+  function ezTrump(v){
+    const f = (v.filings || []).find(x => x.trades?.length) || (v.filings || [])[0]; if (!f) return "";
+    const T = f.trades || [];
+    const buys = T.filter(t => t.side === "buy").sort((a, b) => ezAmt(b.amount) - ezAmt(a.amount));
+    const sells = T.filter(t => t.side === "sell").sort((a, b) => ezAmt(b.amount) - ezAmt(a.amount));
+    const per = String(f.period || ""), perKo = /^\d{4}-\d{2}$/.test(per) ? `${+per.slice(5)}월` : per.replace(/^\d{4}-/, "");
+    const amtKo = a => { const m = String(a || "").match(/\$([\d,]+)\s*-\s*\$([\d,]+)/); return m ? `최대 ${usdKo(+m[2].replace(/,/g, ""))}` : "금액 미공개"; };
+    const li = arr => `<ul class="ez-list">${arr.slice(0, 3).map(t => `<li><span>${esc(ezName(t.sym, t.name))}</span><small>${esc(amtKo(t.amount))}</small></li>`).join("")}</ul>`;
+    const news = (DATA?.news || []).filter(n => n.tag === "트럼프").sort((a, b) => (b.time || "").localeCompare(a.time || "")).slice(0, 4);
+    const foot = `${f.filed || ""} 공개 · ${esc(v.basis || "")}`;
+    return [
+      ezCard("🇺🇸 쉽게 말하면", `트럼프 계좌는 ${esc(perKo)}에 <b>${(f.count || T.length).toLocaleString()}건</b> 사고팔았어요`,
+        `<p class="ez-p">${esc(f.summary || "")}${f.range ? `<br>거래 금액 합계 ${esc(f.range)}` : ""}</p><p class="ez-p muted">대부분 외부 운용사가 대신 매매한 계좌라, 본인 판단으로 고른 종목이라고 보긴 어려워요.</p>`, foot, "trump"),
+      buys.length ? ezCard("🟢 크게 산 것", `${esc(josa(ezName(buys[0].sym, buys[0].name), "을", "를"))} 가장 크게 샀어요`, li(buys), "금액은 구간으로만 공개돼요 (최대값 기준 정렬)", "trump") : "",
+      sells.length ? ezCard("🔴 크게 판 것", `${esc(josa(ezName(sells[0].sym, sells[0].name), "을", "를"))} 가장 크게 팔았어요`, li(sells), "공시에서 확인된 거래만 보여요", "trump") : "",
+      news.length ? ezCard("📰 트럼프 발 증시 뉴스", `최근 ${news.length}건 · 호재 ${news.filter(n => toneOf(n.title).tone === "good").length} · 악재 ${news.filter(n => toneOf(n.title).tone === "bad").length}`,
+        `<ul class="ez-news">${news.map(n => `<li>${toneBadge(n) || '<span class="tone neutral">중립</span>'}<a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(hasKo(n.title) ? n.title : TR[n.title] || n.title)}</a></li>`).join("")}</ul>`, "제목 기준 분류예요", "") : "",
+    ].join("");
+  }
+  function renderEz(){
+    const box = $("#ezPanel"); if (!box) return;
+    const inv = PF?.investors || {};
+    if (!inv.buffett && !inv.trump){ box.hidden = true; return; }
+    box.hidden = false;
+    if (!inv[EZ_TAB]) EZ_TAB = inv.buffett ? "buffett" : "trump";
+    $("#ezSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ez === EZ_TAB));
+    $("#ezRow").innerHTML = EZ_TAB === "buffett" ? ezBuffett(inv.buffett, PF.meta) : ezTrump(inv.trump);
+    $("#ezRow").scrollLeft = 0;
+  }
+  $("#ezSeg").addEventListener("click", e => { const b = e.target.closest("[data-ez]"); if (!b) return; EZ_TAB = b.dataset.ez; try { localStorage.setItem("mt-ez", EZ_TAB); } catch {} renderEz(); });
+  $("#ezRow").addEventListener("click", e => { const b = e.target.closest("[data-ez-go]"); if (b){ S.inv = b.dataset.ezGo; setView("portfolio", b.dataset.ezGo); } });
 
   /* ================= 기술적 분석 패널 ================= */
   const TA_STATE = { sym: null, an: null, ai: null, aiErr: null, busy: false, ctl: null, t0: 0, timer: null };
