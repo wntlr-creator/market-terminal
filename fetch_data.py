@@ -352,7 +352,15 @@ def build_data(prev=None):
                 earnings.append(e)
     except Exception as ex:  # noqa: BLE001
         log("실적 일정(시가총액 상위) 실패", ex)
-    earnings.sort(key=lambda e: e.get("ts") or e["date"])
+    # ts(밀리초 숫자)가 없는 항목은 날짜(문자열)를 같은 단위 숫자로 바꿔서 정렬
+    def _ek(e):
+        if e.get("ts"):
+            return e["ts"]
+        try:
+            return int(datetime.fromisoformat(e["date"]).replace(tzinfo=timezone.utc).timestamp() * 1000)
+        except Exception:  # noqa: BLE001
+            return 0
+    earnings.sort(key=_ek)
     if not earnings:
         earnings = prev.get("earnings", [])
 
