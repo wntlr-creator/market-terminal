@@ -1,0 +1,26 @@
+# Render 블루프린트: 저장소를 연결하면 이 설정대로 무료 웹 서비스가 만들어져요.
+services:
+  - type: web
+    name: yh-market-terminal
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    # 데이터 파일만 바뀐 커밋(자동 갱신)으로는 다시 배포하지 않아요 → 무료 빌드 시간 절약
+    buildFilter:
+      ignoredPaths:
+        - docs/data.json
+        - docs/portfolios.json
+        - docs/kr/**
+        - data/**
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: SEC_USER_AGENT        # 예: "YH Market Terminal 내이메일@example.com"
+        sync: false
+      - key: ANTHROPIC_API_KEY     # 선택: 넣으면 앱에서도 AI 기술적 분석이 돼요
+        sync: false
+      - key: AI_ACCESS_CODE        # 선택: AI 기능에 거는 비밀번호 (API 키를 넣었다면 꼭 설정)
+        sync: false

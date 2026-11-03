@@ -1,0 +1,273 @@
+{
+  "board": [
+    {
+      "id": "kr",
+      "label": "국내",
+      "items": [
+        {
+          "sym": "^KS11",
+          "name": "코스피"
+        },
+        {
+          "sym": "^KQ11",
+          "name": "코스닥"
+        }
+      ]
+    },
+    {
+      "id": "us",
+      "label": "미국",
+      "items": [
+        {
+          "sym": "^GSPC",
+          "name": "S&P 500"
+        },
+        {
+          "sym": "^IXIC",
+          "name": "나스닥"
+        },
+        {
+          "sym": "^DJI",
+          "name": "다우"
+        },
+        {
+          "sym": "^RUT",
+          "name": "러셀2000"
+        },
+        {
+          "sym": "^SOX",
+          "name": "필라델피아 반도체"
+        },
+        {
+          "sym": "^VIX",
+          "name": "VIX 공포지수"
+        }
+      ]
+    },
+    {
+      "id": "asia",
+      "label": "아시아",
+      "items": [
+        {
+          "sym": "^N225",
+          "name": "닛케이225"
+        },
+        {
+          "sym": "^HSI",
+          "name": "항셍"
+        },
+        {
+          "sym": "000001.SS",
+          "name": "상해종합"
+        },
+        {
+          "sym": "^TWII",
+          "name": "대만 가권"
+        }
+      ]
+    },
+    {
+      "id": "coin",
+      "label": "코인",
+      "items": [
+        {
+          "sym": "BTC-USD",
+          "name": "비트코인",
+          "upbit": "KRW-BTC"
+        },
+        {
+          "sym": "ETH-USD",
+          "name": "이더리움",
+          "upbit": "KRW-ETH"
+        },
+        {
+          "sym": "XRP-USD",
+          "name": "리플",
+          "upbit": "KRW-XRP"
+        },
+        {
+          "sym": "SOL-USD",
+          "name": "솔라나",
+          "upbit": "KRW-SOL"
+        }
+      ]
+    },
+    {
+      "id": "macro",
+      "label": "환율·원자재·금리",
+      "items": [
+        {
+          "sym": "KRW=X",
+          "name": "원/달러"
+        },
+        {
+          "sym": "JPYKRW=X",
+          "name": "원/100엔",
+          "mult": 100
+        },
+        {
+          "sym": "DX-Y.NYB",
+          "name": "달러인덱스"
+        },
+        {
+          "sym": "^TNX",
+          "name": "미 10년물 금리",
+          "unit": "%"
+        },
+        {
+          "sym": "CL=F",
+          "name": "WTI 유가"
+        },
+        {
+          "sym": "GC=F",
+          "name": "금"
+        }
+      ]
+    }
+  ],
+  "watchlist": [
+    {
+      "sym": "005930.KS",
+      "name": "삼성전자"
+    },
+    {
+      "sym": "000660.KS",
+      "name": "SK하이닉스"
+    },
+    {
+      "sym": "005380.KS",
+      "name": "현대차"
+    },
+    {
+      "sym": "NVDA",
+      "name": "엔비디아"
+    },
+    {
+      "sym": "AAPL",
+      "name": "애플"
+    },
+    {
+      "sym": "MSFT",
+      "name": "마이크로소프트"
+    },
+    {
+      "sym": "GOOGL",
+      "name": "알파벳"
+    },
+    {
+      "sym": "AMZN",
+      "name": "아마존"
+    },
+    {
+      "sym": "META",
+      "name": "메타"
+    },
+    {
+      "sym": "TSLA",
+      "name": "테슬라"
+    },
+    {
+      "sym": "TSM",
+      "name": "TSMC"
+    },
+    {
+      "sym": "PLTR",
+      "name": "팔란티어"
+    }
+  ],
+  "chart_extra": [
+    "^GSPC",
+    "^IXIC",
+    "^KS11",
+    "^KQ11",
+    "BTC-USD"
+  ],
+  "sectors": [
+    {
+      "sym": "XLK",
+      "name": "기술"
+    },
+    {
+      "sym": "XLC",
+      "name": "커뮤니케이션"
+    },
+    {
+      "sym": "XLY",
+      "name": "경기소비재"
+    },
+    {
+      "sym": "XLP",
+      "name": "필수소비재"
+    },
+    {
+      "sym": "XLE",
+      "name": "에너지"
+    },
+    {
+      "sym": "XLF",
+      "name": "금융"
+    },
+    {
+      "sym": "XLV",
+      "name": "헬스케어"
+    },
+    {
+      "sym": "XLI",
+      "name": "산업재"
+    },
+    {
+      "sym": "XLB",
+      "name": "소재"
+    },
+    {
+      "sym": "XLRE",
+      "name": "부동산"
+    },
+    {
+      "sym": "XLU",
+      "name": "유틸리티"
+    }
+  ],
+  "earnings_extra": [
+    {
+      "sym": "AVGO",
+      "name": "브로드컴"
+    },
+    {
+      "sym": "AMD",
+      "name": "AMD"
+    },
+    {
+      "sym": "NFLX",
+      "name": "넷플릭스"
+    },
+    {
+      "sym": "JPM",
+      "name": "JP모건"
+    },
+    {
+      "sym": "COST",
+      "name": "코스트코"
+    },
+    {
+      "sym": "ORCL",
+      "name": "오라클"
+    },
+    {
+      "sym": "INTC",
+      "name": "인텔"
+    },
+    {
+      "sym": "MU",
+      "name": "마이크론"
+    }
+  ],
+  "news_keywords": [
+    "미국증시",
+    "코스피",
+    "환율",
+    "반도체 주가",
+    "비트코인"
+  ],
+  "news_per_ticker": 3
+}

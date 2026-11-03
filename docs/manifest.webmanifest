@@ -1,0 +1,17 @@
+{
+  "name": "YH 마켓 터미널",
+  "short_name": "YH 터미널",
+  "description": "시세·차트·기술적 분석·대가 포트폴리오를 한 화면에서 보는 개인 주식 터미널",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c1118",
+  "theme_color": "#0c1118",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
