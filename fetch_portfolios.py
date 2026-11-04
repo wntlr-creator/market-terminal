@@ -236,7 +236,12 @@ def build_13f(inv, prev_entry, cache):
 # ------------------------------------------------------------------ ARK 일일 매매
 def ark_daily(entry):
     prev_snap = json.loads(ARK_LAST.read_text(encoding="utf-8")) if ARK_LAST.exists() else {}
-    snap, as_of = {}, None
+    snap, fund_date = {}, {}
+
+    def _iso(d):
+        m = re.match(r"(\d{1,2})/(\d{1,2})/(\d{4})", (d or "").strip())  # ARK CSV는 MM/DD/YYYY
+        return f"{m.group(3)}-{int(m.group(1)):02d}-{int(m.group(2)):02d}" if m else None
+
     for fund, fname in ARK_FUNDS.items():
         try:
             raw = http(ARK_BASE + urllib.request.quote(fname), ua=BROWSER_UA).decode("utf-8-sig")
@@ -247,20 +252,27 @@ def ark_daily(entry):
             tk = (row.get("ticker") or "").strip()
             if not tk or not row.get("shares"):
                 continue
-            as_of = (row.get("date") or "").strip() or as_of
+            d = _iso(row.get("date"))
+            if d:
+                fund_date[fund] = max(fund_date.get(fund, d), d)
             snap[f"{fund}|{tk}"] = {
                 "fund": fund, "sym": tk, "name": (row.get("company") or "").strip(),
                 "shares": float(row["shares"].replace(",", "")),
                 "weight": float((row.get("weight (%)") or "0").replace("%", "") or 0),
             }
-    if not snap:
+    if not snap or not fund_date:
         return entry
-    m = re.match(r"(\d{1,2})/(\d{1,2})/(\d{4})", as_of or "")
-    if m:  # ARK CSV는 MM/DD/YYYY
-        as_of = f"{m.group(3)}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"
+    # 가장 최근 날짜를 기준으로, 1주일 넘게 갱신이 멈춘 펀드 파일(예: 정리·이름 변경된 ETF)은 빼기
+    as_of = max(fund_date.values())
+    cut = (datetime.fromisoformat(as_of) - timedelta(days=7)).date().isoformat()
+    stale = {f for f, d in fund_date.items() if d < cut}
+    if stale:
+        log("ARK 오래된 펀드 파일 제외", sorted(stale))
+        snap = {k: v for k, v in snap.items() if v["fund"] not in stale}
+    live_funds = {v["fund"] for v in snap.values()}
     trades = []
     if prev_snap and prev_snap.get("asOf") != as_of:
-        old = prev_snap.get("rows", {})
+        old = {k: o for k, o in prev_snap.get("rows", {}).items() if o.get("fund") in live_funds}   # 같은 펀드끼리만 비교
         for k, r in snap.items():
             o = old.get(k)
             if o is None:
