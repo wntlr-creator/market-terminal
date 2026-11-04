@@ -1688,10 +1688,20 @@ ${JSON.stringify(need)}`;
     renderTape(); renderBoard(); renderWatch(); renderChart(); renderHeat(); renderEarn(); renderNews(); renderMovers();
   }
 
+  // Claude 앱 안에서 열면: GitHub이 10분마다 갱신하는 사이트의 데이터 파일을 먼저 읽기 (브라우저 창을 열지 않아도 최신)
+  const MIRROR = "https://wntlr-creator.github.io/market-terminal/";
+  let mirrorOK = !!window.claude && !location.href.startsWith(MIRROR);
+  async function fetchD(path, opt){
+    if (mirrorOK && !API.on){
+      try { const r = await fetch(MIRROR + path, opt); if (r.ok) return r; } catch {}
+      mirrorOK = false;   // 막혀 있으면 이후엔 터미널에 딸린 파일만 사용
+    }
+    return fetch(path, opt);
+  }
   async function load(){
     const wasManual = S.manual;
     try {
-      let r = await fetch(API.on ? "api/market" : "data.json?t=" + Date.now(), { cache: "no-store" });
+      let r = API.on ? await fetch("api/market", { cache: "no-store" }) : await fetchD("data.json?t=" + Date.now(), { cache: "no-store" });
       if (!r.ok && API.on) r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
       if (!r.ok) throw new Error(r.status);
       const before = DATA?.meta?.updated;
@@ -2027,7 +2037,8 @@ ${JSON.stringify(need)}`;
     if (LIVE.mode !== "browser" || !LIVE.mcp) return;
     await paneRun(async () => { try { await LIVE.mcp.callTool(BROWSER, "navigate", { url: "https://query1.finance.yahoo.com/favicon.ico" }, { cache: false }); } catch {} });
   }
-  LIVE.auto = (() => { try { return localStorage.getItem("mt-live-auto") !== "0"; } catch { return true; } })();
+  // 앱 브라우저 창 자동 사용은 기본 꺼짐 (켜 두면 열 때마다 아래에 브라우저 창이 떠요). 새로고침을 누를 때만 사용
+  LIVE.auto = (() => { try { return localStorage.getItem("mt-live-auto2") === "1"; } catch { return false; } })();
   async function saveQuotes(qs, manual){
     const slim = {};
     for (const [k, q] of Object.entries(qs)) slim[k] = { price: q.price, chg: q.chg, chgPct: q.chgPct, open: q.open, high: q.high, low: q.low, date: q.date };
@@ -2051,6 +2062,12 @@ ${JSON.stringify(need)}`;
   }
   function applySaved(d, from){
     if (!d?.quotes || !DATA) return false;
+    // 자동 갱신된 데이터 파일보다 오래된 저장 현재가는 덮어쓰지 않기 (실적·급등 목록은 아래에서 따로 판단)
+    const fileT = Date.parse(DATA.meta?.updated || 0) || 0;
+    if (d.t && fileT && d.t < fileT){
+      if (d.mkt?.t && d.mkt.h && !(MKT.t >= d.mkt.t)){ Object.assign(MKT, d.mkt); try { localStorage.setItem("mt-mkt", JSON.stringify(MKT)); } catch {} }
+      return false;
+    }
     (d.extra || []).forEach(x => {
       if (DATA.watchlist.some(w => w.sym === x.sym) || DATA.board.some(g => g.id !== "_search" && g.items.some(i => i.sym === x.sym))) return;
       let g = DATA.board.find(b => b.id === "_search"); if (!g){ g = { id: "_search", label: "검색", items: [] }; DATA.board.push(g); }
@@ -2308,7 +2325,7 @@ ${JSON.stringify(need)}`;
 
   async function loadPf(){
     try {
-      const r = await fetch(API.on ? "api/portfolios" : "portfolios.json?t=" + Date.now(), { cache: "no-store" });
+      const r = API.on ? await fetch("api/portfolios", { cache: "no-store" }) : await fetchD("portfolios.json?t=" + Date.now(), { cache: "no-store" });
       if (!r.ok) throw new Error(r.status);
       PF = await r.json();
       PF.investors = PF.investors || {};
@@ -2609,7 +2626,7 @@ ${JSON.stringify(data)}`;
   const krShardOf = sym => { let h = 0; for (const ch of sym) h = (h * 31 + ch.charCodeAt(0)) % 1000003; return h % (KR.idx?.shards || 64); };
   function loadKR(){
     if (KR.loading) return KR.loading;
-    KR.loading = fetch("kr/index.json").then(r => r.ok ? r.json() : null).then(j => {
+    KR.loading = fetchD("kr/index.json").then(r => r.ok ? r.json() : null).then(j => {
       if (!j) return;
       KR.idx = j; KR.dates = j.dates;
       j.items.forEach(([sym, name, mk, close, chg, mcap]) => KR.map[sym] = { sym, name, mk, price: close, chgPct: chg, mcap });
@@ -2619,7 +2636,7 @@ ${JSON.stringify(data)}`;
   }
   async function krCandles(sym){
     const n = krShardOf(sym), key = String(n).padStart(2, "0");
-    if (!KR.shards[key]) KR.shards[key] = fetch(`kr/s${key}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    if (!KR.shards[key]) KR.shards[key] = fetchD(`kr/s${key}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
     const sh = await KR.shards[key], rec = sh[sym]; if (!rec) return null;
     const out = []; let c = 0;
     rec.c.forEach((dc, i) => { c += dc; const di = rec.s + (rec.d ? rec.d[i] : i);
@@ -3303,7 +3320,7 @@ ${JSON.stringify(ctx)}
 
   /* 동일 업종 — 국내: 거래소 공식 업종(KIND), 미국: 주요 종목 분류 */
   let SECT = null, sectP = null;
-  const loadSectors = () => sectP || (sectP = fetch("kr/sectors.json").then(r => r.ok ? r.json() : null).then(j => { SECT = j; }).catch(() => {}));
+  const loadSectors = () => sectP || (sectP = fetchD("kr/sectors.json").then(r => r.ok ? r.json() : null).then(j => { SECT = j; }).catch(() => {}));
   const isKRsym = s => /\.(KS|KQ|KN)$/.test(s);
   const US_GROUPS = {
     "반도체": "NVDA AMD INTC QCOM MU AVGO TSM ARM ASML SMCI",
@@ -3397,7 +3414,7 @@ JSON 하나로만 답해: {"related":[{"name":"회사명(한국어)","ticker":""
   $("#updInfo").addEventListener("click", e => {
     if (e.target.id === "liveGo"){ LIVE.state = "idle"; liveTick(true); }
     if (e.target.id === "liveAuto"){
-      LIVE.auto = !LIVE.auto; try { localStorage.setItem("mt-live-auto", LIVE.auto ? "1" : "0"); } catch {}
+      LIVE.auto = !LIVE.auto; try { localStorage.setItem("mt-live-auto2", LIVE.auto ? "1" : "0"); } catch {}
       clearInterval(LIVE.timer); LIVE.timer = null;
       if (LIVE.auto){ liveTick(true); LIVE.timer = setInterval(() => liveTick(false), BROWSER_EVERY); }
       renderUpd();
