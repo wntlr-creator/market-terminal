@@ -127,6 +127,12 @@ NAME_DROP = {"INC", "CORP", "CORPORATION", "CO", "LTD", "PLC", "CLASS", "A", "B"
              "GROUP", "THE", "LIMITED", "COMPANY", "ORD", "SHS", "ADR", "SPONSORED", "REIT", "TRUST", "SE", "N.V.", "S.A."}
 
 
+CASH_RE = re.compile(r"현금|예금|원화|USD CASH|CASH|증거금|미수|미지급")
+# 같은 회사의 다른 주식 종류(A·B·C주)
+CLASS_SYM = {"ALPHABET|A": "GOOGL", "ALPHABET|C": "GOOG", "BERKSHIRE HATHAWAY|B": "BRK-B", "BERKSHIRE HATHAWAY|A": "BRK-A",
+             "FOX|A": "FOXA", "FOX|B": "FOX", "NEWS|A": "NWSA", "NEWS|B": "NWS", "BROWN FORMAN|B": "BF-B", "LENNAR|A": "LEN", "LENNAR|B": "LEN-B"}
+
+
 def name_key(n):
     t = [w for w in re.sub(r"[^A-Z0-9 ]", " ", str(n).upper()).split() if w not in NAME_DROP]
     return " ".join(t[:2])
@@ -150,7 +156,10 @@ def kr_holdings_wise(codes, kr_by_name, kr_price, us_by_key, us_price, fx):
                 nm = (r.get("STK_NM_KOR") or "").strip()
                 if not nm:
                     continue
-                sym = kr_by_name.get(nm) or us_by_key.get(name_key(nm))
+                if CASH_RE.search(nm):
+                    continue   # 현금·예금은 분석 대상이 아님
+                cm = re.search(r"\b(?:CL|CLASS)[\s-]*([ABC])\b", nm.upper())
+                sym = kr_by_name.get(nm) or CLASS_SYM.get(f"{name_key(nm)}|{cm.group(1) if cm else ''}") or us_by_key.get(name_key(nm))
                 items.append({"sym": sym, "name": nm, "w": r.get("ETF_WEIGHT"), "cnt": r.get("AGMT_STK_CNT") or 0})
             if not items:
                 fails += 1
@@ -280,6 +289,7 @@ def main():
     if not fresh or os.environ.get("ETF_FORCE"):
         top_kr = [c for c, _, _ in kr_list[:300]]
         kr_by_name = {it[1]: it[0] for it in kr_idx["items"]}
+        kr_by_name.update({n: c + ".KS" for c, n, _ in kr_list})   # 다른 ETF를 담은 경우(예: 레버리지 ETF 안의 KODEX 200)
         kr_price = {it[0]: it[3] for it in kr_idx["items"]}
         us_items = json.loads(US_INDEX.read_text(encoding="utf-8")).get("items", []) if US_INDEX.exists() else []
         prev_etf = json.loads((OUT / "index.json").read_text(encoding="utf-8")).get("items", []) if (OUT / "index.json").exists() else []
