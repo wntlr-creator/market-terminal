@@ -110,8 +110,23 @@ def kr_holdings_pykrx(codes):
     return out
 
 
+def debug_dump(code):
+    """구성종목 표 위치를 찾기 위한 진단용: 화면 원본 일부를 data/에 저장"""
+    for name, url, enc in (("naver_main", f"https://finance.naver.com/item/main.naver?code={code}", "euc-kr"),
+                           ("wise_etf", f"https://navercomp.wisereport.co.kr/v2/ETF/index.aspx?cmp_cd={code}", "utf-8")):
+        try:
+            html = get(url, enc=enc)
+            i = max(html.find("구성종목"), html.find("구성자산"), 0)
+            (ROOT / "data" / f"etf_debug_{name}.txt").write_text(f"len={len(html)} idx={i}\n" + html[max(0, i - 3000):i + 15000], encoding="utf-8")
+            log("진단 저장", name, len(html), i)
+        except Exception as e:  # noqa: BLE001
+            log("진단 실패", name, e)
+
+
 def kr_holdings_naver(codes):
     """네이버 금융 ETF 화면의 '구성종목(구성자산)' 표 (상위 10개)"""
+    if codes:
+        debug_dump(codes[0])
     out, fails = {}, 0
     for c in codes:
         try:

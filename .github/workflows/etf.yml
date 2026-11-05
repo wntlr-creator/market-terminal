@@ -2,8 +2,7 @@ name: ETF 목록·일봉·구성종목 갱신
 
 on:
   schedule:
-    - cron: "40 21 * * 1-5"   # 한국시간 오전 6시 40분 (미국 장 마감 후)
-    - cron: "50 6 * * 1-5"    # 한국시간 오후 3시 50분 (국내 장 마감 후)
+    - cron: "40 21 * * 1-5"   # 하루 한 번, 한국시간 오전 6시 40분 (미국 장 마감 후). 장중 가격은 quotes.json이 10분마다 채워요
   push:
     paths: ["build_etf.py", ".github/workflows/etf.yml"]
   workflow_dispatch:
@@ -29,6 +28,7 @@ jobs:
         env:
           KRX_ID: ${{ secrets.KRX_ID }}
           KRX_PW: ${{ secrets.KRX_PW }}
+          ETF_FORCE: ${{ github.event_name != 'schedule' && '1' || '' }}
         run: python build_etf.py
         continue-on-error: true
       - name: 변경된 데이터 커밋
@@ -36,7 +36,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if [ -d docs/etf ]; then git add docs/etf; fi
-          if [ -f data/etf_log.txt ]; then git add data/etf_log.txt; fi
+          git add data/etf_*.txt 2>/dev/null || true
           git diff --cached --quiet && exit 0
           git commit -m "etf: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
           for i in 1 2 3; do git pull --rebase && git push && exit 0; sleep 5; done
