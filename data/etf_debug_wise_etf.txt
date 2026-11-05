@@ -1,0 +1,144 @@
+len=99645 idx=38498
+										<input type="hidden" id="hG3" value="D" />
+												</div>
+											</li>
+											<li class="list-date" >
+												<label for="txtStart" class="blind">순자산가치(NAV)추이 검색시작일 - 년월일 직접입력가능(예:2013-05-16)</label><input class="rptInput01 calendarInput" id="txtStart" type="text" name="txtStart" value="2026-08-06">
+												~
+									<label for="txtEnd" class="blind">순자산가치(NAV)추이 검색종료일 - 년월일 직접입력가능(예:2013-08-16)</label><input class="rptInput01 calendarInput" id="txtEnd" type="text" name="txtEnd" value="2026-11-06">
+											</li>
+										</ul>
+										</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="fl_le half">
+								<div class="height255 border_box" style="display: block; margin-bottom:0px;">
+									<div class="fixed-table-container">
+										<div class="header-background">
+										</div>
+										<div class="fixed-table-container-inner" style="height: 100%; overflow-x: hidden; overflow-y: auto">
+											<table tabindex="0" id="NAV_grid" class="table" cellspacing="0" summary="검색한 종목의 순자산가치(NAV) 추이">
+												<caption class="blind">순자산가치(NAV) 추이</caption>
+												<colgroup>
+													<col style="width: 22%" />
+													<col style="width: 33%" />
+													<col style="width: 22%" />
+													<col style="width: 23%" />
+												</colgroup>
+												<thead>
+													<tr>
+														<th class="first" scope="col">
+															<div class="th-inner" style="width: 22%">
+																날짜
+															</div>
+														</th>
+														<th scope="col">
+															<div class="th-inner" style="width: 32%">순자산가치(NAV)</div>
+														</th>
+														<th scope="col">
+															<div class="th-inner" style="width: 22%">ETF종가</div>
+														</th>
+														<th scope="col">
+															<div class="th-inner" style="width: 23%">괴리율(%)</div>
+														</th>
+													</tr>
+												</thead>
+												<tbody id="NAV_grid_body">
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+								<script id="NAV_grid_template" type="text/x-jquery-tmpl">
+									<tr>
+										<th class="title" scope="row">${TRD_DT ? TRD_DT.replace(/-/g,'/'):'-'}</th>
+										<td class="num">${NAV ? Highcharts.numberFormat(NAV,2,'.'):'-'}</td>
+										<td class="num">${CLOSE_PRC ? Highcharts.numberFormat(CLOSE_PRC,0,'.'):'-'}</td>
+										<td class="num">${DIFF_RATE ? Highcharts.numberFormat(DIFF_RATE,2,'.'):'-'}</td>
+									</tr>
+								</script>
+							</div>
+							<div class="fl_ri half">
+								<div class='gHead mb-0'>
+								<div id="NAV_chart" class="chart">
+								</div>
+								</div>
+							</div>
+							<p class="disc table" style="text-align:left;">* 기초자산 종가 확정시간의 차이로 실제 시장 괴리율과 차이가 발생할 수 있음</p>
+							<div class="clear">
+							</div>
+							<!--  순자산가치(NAV) 추이 -->
+							
+							<div class="tit-empty"></div>
+							<!-- CU당 구성종목 -->
+							<div class="fl_le half">
+								<div class="header-table">
+									<dl class="header-table-row">
+										<dd class="header-table-cell"><h5 id="cu_more"><span>CU당 구성종목</span></h5></dd>
+										<dd class="header-table-cell unit">
+											<p>[기준:26.11.04]</p>
+										</dd>
+									</dl>
+								</div>
+								<div class="height255 border_box" style="display: block; margin-bottom:0px;">
+									<div class="fixed-table-container">
+										<div class="header-background">
+										</div>
+										<div class="fixed-table-container-inner" style="height: 100%; overflow-x: hidden; overflow-y: auto">
+											<table tabindex="0" id="CU_grid" class="table" zzz cellspacing="0" summary="26.11.04 기준 CU당 구성종목" style="table-layout: fixed">
+												<caption class="blind">
+													CU당 구성종목</caption>
+												<colgroup>
+													<col width="*">
+													<col width="30%">
+													<col width="30%">
+												</colgroup>
+												<thead>
+													<tr>
+														<th scope="col">
+															<div class="th-inner" style="width: 40%">
+																구성종목명
+															</div>
+														</th>
+														<th scope="col">
+															<div class="th-inner" style="width: 30%">
+																주식수(계약수)
+															</div>
+														</th>
+														<th scope="col">
+															<div class="th-inner" style="width: 30%">
+																구성비중(%)
+															</div>
+														</th>
+													</tr>
+												</thead>
+												<tbody id="CU_grid_body">
+												</tbody>
+											</table>
+										</div>
+									</div>
+									<script id="CU_grid_template" type="text/x-jquery-tmpl">
+										<tr>
+											<td class="txt" title="${STK_NM_KOR}">
+												<div class="cut">${STK_NM_KOR}</div>
+											</td>
+											<td class="num">${AGMT_STK_CNT ? Highcharts.numberFormat(AGMT_STK_CNT,0):'-'}</td>
+											<td class="num">${ETF_WEIGHT ? Highcharts.numberFormat(ETF_WEIGHT,2):'-'}</td>
+										</tr>
+									</script>
+								</div>
+								<p class="disc table">* CU : 설정단위(Creation unit)</p>
+                                <p class="disc table">* 구성비중이 없는 경우 주식수로 정렬됨</p>
+							</div>
+							<div class="fl_ri half">
+								<div class="header-table empty"></div>
+								<div class="body">
+									<div class='gHead'>
+										<h6 class="spanCT">CU당 구성종목 TOP 10</h6>
+										<div id="CU_chart" class="chart"></div>
+									</div>
+								</div>
+								<script type="text/javascript">
+									(function(){
+										var CU_data = {"grid_data":[{"TRD_DT":"2026-11-04","AGMT_STK_CNT":347.77,"STK_NM_KOR":"NVIDIA CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":209.73,"STK_NM_KOR":"APPLE INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":141.05,"STK_NM_KOR":"AMAZON.COM INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":106.71,"STK_NM_KOR":"MICROSOFT CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":98.47,"STK_NM_KOR":"AT&T INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":93.46,"STK_NM_KOR":"BANK OF AMERICA CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":84.33,"STK_NM_KOR":"ALPHABET INC-CL A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":81.91,"STK_NM_KOR":"PFIZER INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":71.41,"STK_NM_KOR":"INTEL CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":68.37,"STK_NM_KOR":"BROADCOM INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":68.31,"STK_NM_KOR":"ALPHABET INC-CL C","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":64.04,"STK_NM_KOR":"WALMART INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":59.84,"STK_NM_KOR":"NETFLIX INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":59.71,"STK_NM_KOR":"VERIZON COMMUNICATIONS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":59.09,"STK_NM_KOR":"EXXONMOBIL HOLDINGS CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":56.64,"STK_NM_KOR":"CISCO SYSTEMS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":56.29,"STK_NM_KOR":"FORD MOTOR CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":55.65,"STK_NM_KOR":"COCA-COLA CO/THE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":50.86,"STK_NM_KOR":"COMCAST CORP-CLASS A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":43.46,"STK_NM_KOR":"WELLS FARGO & CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":40.50,"STK_NM_KOR":"TESLA INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":38.20,"STK_NM_KOR":"JPMORGAN CHASE & CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":35.45,"STK_NM_KOR":"MERCK & CO. INC.","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":35.44,"STK_NM_KOR":"AMPHENOL CORP-CL A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":34.63,"STK_NM_KOR":"JOHNSON & JOHNSON","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":33.40,"STK_NM_KOR":"PROCTER & GAMBLE CO/THE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":33.06,"STK_NM_KOR":"PALANTIR TECHNOLOGIES INC-A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":31.69,"STK_NM_KOR":"META PLATFORMS INC-CLASS A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":31.65,"STK_NM_KOR":"P G & E CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":29.98,"STK_NM_KOR":"NEXTERA ENERGY INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":29.35,"STK_NM_KOR":"BRISTOL-MYERS SQUIBB CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":29.35,"STK_NM_KOR":"UBER TECHNOLOGIES INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":29.03,"STK_NM_KOR":"HUNTINGTON BANCSHARES INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":28.39,"STK_NM_KOR":"CHEVRON CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":28.16,"STK_NM_KOR":"KINDER MORGAN INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":26.76,"STK_NM_KOR":"BERKSHIRE HATHAWAY INC-CL B","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":26.62,"STK_NM_KOR":"CSX CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":25.39,"STK_NM_KOR":"ABBVIE INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":24.87,"STK_NM_KOR":"ABBOTT LABORATORIES","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":24.84,"STK_NM_KOR":"ORACLE CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":24.81,"STK_NM_KOR":"WALT DISNEY CO/THE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":24.49,"STK_NM_KOR":"VISA INC-CLASS A SHARES","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":24.11,"STK_NM_KOR":"CITIGROUP INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":24.00,"STK_NM_KOR":"ALTRIA GROUP INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":23.46,"STK_NM_KOR":"ADVANCED MICRO DEVICES","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":23.36,"STK_NM_KOR":"SCHWAB (CHARLES) CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":22.40,"STK_NM_KOR":"PHILIP MORRIS INTERNATIONAL","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":22.39,"STK_NM_KOR":"US BANCORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":21.33,"STK_NM_KOR":"SLB LTD","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":20.83,"STK_NM_KOR":"BOSTON SCIENTIFIC CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":20.64,"STK_NM_KOR":"FREEPORT-MCMORAN INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":20.55,"STK_NM_KOR":"MONSTER BEVERAGE CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":19.61,"STK_NM_KOR":"PEPSICO INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":19.56,"STK_NM_KOR":"KEURIG DR PEPPER INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":19.37,"STK_NM_KOR":"RTX CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":19.03,"STK_NM_KOR":"HEWLETT PACKARD ENTERPRISE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":18.78,"STK_NM_KOR":"KLA CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":18.38,"STK_NM_KOR":"CVS HEALTH CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":18.34,"STK_NM_KOR":"MONDELEZ INTERNATIONAL INC-A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":18.30,"STK_NM_KOR":"CARNIVAL CORP LTD","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":18.18,"STK_NM_KOR":"CHIPOTLE MEXICAN GRILL INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.98,"STK_NM_KOR":"LAM RESEARCH CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.82,"STK_NM_KOR":"GILEAD SCIENCES INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.59,"STK_NM_KOR":"MEDTRONIC PLC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.58,"STK_NM_KOR":"WILLIAMS COS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.56,"STK_NM_KOR":"TRUIST FINANCIAL CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.27,"STK_NM_KOR":"NIKE INC -CL B","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.26,"STK_NM_KOR":"CONOCOPHILLIPS","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":17.15,"STK_NM_KOR":"MORGAN STANLEY","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":16.53,"STK_NM_KOR":"SOUTHERN CO/THE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":16.51,"STK_NM_KOR":"VIATRIS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":16.49,"STK_NM_KOR":"FASTENAL CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":16.38,"STK_NM_KOR":"STARBUCKS CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":16.23,"STK_NM_KOR":"MICRON TECHNOLOGY INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":15.88,"STK_NM_KOR":"TJX COMPANIES INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":15.82,"STK_NM_KOR":"VICI PROPERTIES INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":15.81,"STK_NM_KOR":"DEVON ENERGY CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":15.35,"STK_NM_KOR":"QUALCOMM INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":15.14,"STK_NM_KOR":"NEWMONT CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":15.04,"STK_NM_KOR":"ARISTA NETWORKS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":14.91,"STK_NM_KOR":"GENERAL ELECTRIC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":14.86,"STK_NM_KOR":"SERVICENOW INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":14.83,"STK_NM_KOR":"EXELON CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":14.63,"STK_NM_KOR":"CROWDSTRIKE HOLDINGS INC - A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":14.33,"STK_NM_KOR":"HOME DEPOT INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":14.27,"STK_NM_KOR":"BAKER HUGHES CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.66,"STK_NM_KOR":"PROLOGIS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.60,"STK_NM_KOR":"REALTY INCOME CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.54,"STK_NM_KOR":"INTL BUSINESS MACHINES CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.14,"STK_NM_KOR":"HP INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.12,"STK_NM_KOR":"TEXAS INSTRUMENTS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.03,"STK_NM_KOR":"FIFTH THIRD BANCORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":13.03,"STK_NM_KOR":"KEYCORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.90,"STK_NM_KOR":"UNITEDHEALTH GROUP INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.64,"STK_NM_KOR":"DOMINION ENERGY INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.61,"STK_NM_KOR":"GENERAL MOTORS CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.59,"STK_NM_KOR":"MARVELL TECHNOLOGY INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.44,"STK_NM_KOR":"KRAFT HEINZ CO/THE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.29,"STK_NM_KOR":"PAYPAL HOLDINGS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.24,"STK_NM_KOR":"REGIONS FINANCIAL CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":12.11,"STK_NM_KOR":"COPART INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.97,"STK_NM_KOR":"HALLIBURTON CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.85,"STK_NM_KOR":"CARRIER GLOBAL CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.77,"STK_NM_KOR":"SALESFORCE INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.71,"STK_NM_KOR":"PALO ALTO NETWORKS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.63,"STK_NM_KOR":"OREILLY AUTOMOTIVE INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.62,"STK_NM_KOR":"MASTERCARD INC - A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.50,"STK_NM_KOR":"ELI LILLY & CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.46,"STK_NM_KOR":"COLGATE-PALMOLIVE CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.41,"STK_NM_KOR":"APPLIED MATERIALS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.39,"STK_NM_KOR":"CORNING INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.36,"STK_NM_KOR":"BOEING CO/THE","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.36,"STK_NM_KOR":"ROBINHOOD MARKETS INC - A","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":11.20,"STK_NM_KOR":"DUKE ENERGY CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.81,"STK_NM_KOR":"PPL CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.80,"STK_NM_KOR":"BOOKING HOLDINGS INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.79,"STK_NM_KOR":"BLACKSTONE INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.77,"STK_NM_KOR":"UNITED PARCEL SERVICE-CL B","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.49,"STK_NM_KOR":"OCCIDENTAL PETROLEUM CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.38,"STK_NM_KOR":"DOW INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.36,"STK_NM_KOR":"WELLTOWER INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.36,"STK_NM_KOR":"WEYERHAEUSER CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.35,"STK_NM_KOR":"CARVANA CO","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.34,"STK_NM_KOR":"VIVMARK RESIDENTIAL","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.25,"STK_NM_KOR":"AES CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":10.17,"STK_NM_KOR":"MCDONALDS CORP","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":9.93,"STK_NM_KOR":"KKR & CO INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":9.91,"STK_NM_KOR":"HEALTHPEAK PROPERTIES INC","ETF_WEIGHT":null},{"TRD_DT":"2026-11-04","AGMT_STK_CNT":9.85,"STK_NM_KOR":"HOST HOTELS & RESORTS INC","ETF_WEIGHT":null},{"TRD
