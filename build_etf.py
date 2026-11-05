@@ -123,10 +123,60 @@ def debug_dump(code):
             log("진단 실패", name, e)
 
 
+NAME_DROP = {"INC", "CORP", "CORPORATION", "CO", "LTD", "PLC", "CLASS", "A", "B", "C", "COM", "SA", "NV", "AG", "HOLDINGS", "HOLDING",
+             "GROUP", "THE", "LIMITED", "COMPANY", "ORD", "SHS", "ADR", "SPONSORED", "REIT", "TRUST", "SE", "N.V.", "S.A."}
+
+
+def name_key(n):
+    t = [w for w in re.sub(r"[^A-Z0-9 ]", " ", str(n).upper()).split() if w not in NAME_DROP]
+    return " ".join(t[:2])
+
+
+def kr_holdings_wise(codes, kr_by_name, kr_price, us_by_key, us_price, fx):
+    """와이즈리포트(네이버 금융 ETF 분석) 'CU당 구성종목' → [[티커, 이름, 비중%]]"""
+    out, fails = {}, 0
+    dec = json.JSONDecoder()
+    for c in codes:
+        try:
+            html = get(f"https://navercomp.wisereport.co.kr/v2/ETF/index.aspx?cmp_cd={c}")
+            i = html.find("var CU_data = ")
+            if i < 0:
+                fails += 1
+                continue
+            data, _ = dec.raw_decode(html, i + len("var CU_data = "))
+            rows = data.get("grid_data") or []
+            items = []
+            for r in rows:
+                nm = (r.get("STK_NM_KOR") or "").strip()
+                if not nm:
+                    continue
+                sym = kr_by_name.get(nm) or us_by_key.get(name_key(nm))
+                items.append({"sym": sym, "name": nm, "w": r.get("ETF_WEIGHT"), "cnt": r.get("AGMT_STK_CNT") or 0})
+            if not items:
+                fails += 1
+                continue
+            if not any(x["w"] for x in items):
+                # 비중이 비어 있으면 '주식수 × 현재가'로 비중 계산 (가격을 아는 종목끼리)
+                for x in items:
+                    p = kr_price.get(x["sym"]) if x["sym"] in kr_price else (us_price.get(x["sym"]) or 0) * fx
+                    x["v"] = (x["cnt"] or 0) * (p or 0)
+                tot = sum(x["v"] for x in items) or 0
+                for x in items:
+                    x["w"] = x["v"] / tot * 100 if tot else 0
+            items = sorted([x for x in items if x["w"]], key=lambda x: -x["w"])[:15]
+            if items:
+                out[c] = [[x["sym"] or "", x["name"], round(float(x["w"]), 2)] for x in items]
+            else:
+                fails += 1
+        except Exception:  # noqa: BLE001
+            fails += 1
+        time.sleep(0.25)
+    log(f"와이즈리포트 구성종목 {len(out)}개 ETF (실패 {fails})")
+    return out
+
+
 def kr_holdings_naver(codes):
     """네이버 금융 ETF 화면의 '구성종목(구성자산)' 표 (상위 10개)"""
-    if codes:
-        debug_dump(codes[0])
     out, fails = {}, 0
     for c in codes:
         try:
@@ -229,13 +279,27 @@ def main():
     holdings = {k: v for k, v in prev_h.items() if not k.startswith("_")}
     if not fresh or os.environ.get("ETF_FORCE"):
         top_kr = [c for c, _, _ in kr_list[:300]]
-        krh = kr_holdings_pykrx(top_kr) or kr_holdings_naver(top_kr)
-        src = "KRX" if os.environ.get("KRX_ID") and krh else "네이버 금융"
+        kr_by_name = {it[1]: it[0] for it in kr_idx["items"]}
+        kr_price = {it[0]: it[3] for it in kr_idx["items"]}
+        us_items = json.loads(US_INDEX.read_text(encoding="utf-8")).get("items", []) if US_INDEX.exists() else []
+        prev_etf = json.loads((OUT / "index.json").read_text(encoding="utf-8")).get("items", []) if (OUT / "index.json").exists() else []
+        us_by_key, us_price = {}, {}
+        for it in us_items + [x for x in prev_etf if x[2] == "C"]:
+            us_by_key.setdefault(name_key(it[1]), it[0]); us_price[it[0]] = it[2] if len(it) > 4 and it[2] not in ("C", "US", "KR") else it[3]
+        try:
+            dj = json.loads((ROOT / "docs" / "data.json").read_text(encoding="utf-8"))
+            fx = next(i["price"] for g in dj["board"] for i in g["items"] if i["sym"] == "KRW=X")
+        except Exception:  # noqa: BLE001
+            fx = 1400
+        krh = kr_holdings_pykrx(top_kr)
+        src = "KRX"
+        if not krh:
+            krh, src = kr_holdings_wise(top_kr, kr_by_name, kr_price, us_by_key, us_price, fx), "와이즈리포트(네이버 금융)"
         for c, rows in krh.items():
             fixed = []
             for code, name, w in rows:
-                sym = kr_sym.get(code.zfill(6)[-6:]) if code.isdigit() else None
-                fixed.append([sym or code, name or kr_name.get(sym, code), w])
+                sym = kr_sym.get(code.zfill(6)[-6:]) if code.isdigit() else code   # KRX는 6자리 코드, 와이즈리포트는 이미 티커
+                fixed.append([sym or "", name or kr_name.get(sym, code), w])
             holdings[c + ".KS"] = {"asOf": datetime.now(KST).strftime("%Y-%m-%d"), "src": src, "h": fixed}
         for s, rows in us_holdings(us_list).items():
             holdings[s] = {"asOf": datetime.now(KST).strftime("%Y-%m-%d"), "src": "Yahoo Finance", "h": rows}
