@@ -20,6 +20,14 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "docs" / "quotes.json"
 KR_INDEX = ROOT / "docs" / "kr" / "index.json"
 US_INDEX = ROOT / "docs" / "us" / "index.json"
+ETF_INDEX = ROOT / "docs" / "etf" / "index.json"
+
+
+def etf_items():
+    try:
+        return json.loads(ETF_INDEX.read_text(encoding="utf-8")).get("items", [])
+    except (FileNotFoundError, ValueError):
+        return []
 KST = timezone(timedelta(hours=9))
 UA = {"User-Agent": "Mozilla/5.0 (market-terminal personal dashboard)"}
 
@@ -68,7 +76,7 @@ def spark_batch(syms):
 
 def kr_quotes():
     idx = json.loads(KR_INDEX.read_text(encoding="utf-8"))
-    syms = [it[0] for it in idx.get("items", [])]
+    syms = [it[0] for it in idx.get("items", [])] + [it[0] for it in etf_items() if it[2] == "KR"]   # 국내 ETF 포함
     groups = [syms[i:i + 20] for i in range(0, len(syms), 20)]
     out, fails = {}, 0
 
@@ -108,6 +116,7 @@ def us_quotes():
     # 미국 일봉 묶음(docs/us)에 있는 종목 중 스크리너에 안 잡힌 건 묶음 시세로
     try:
         extra = [it[0] for it in json.loads(US_INDEX.read_text(encoding="utf-8")).get("items", []) if it[0] not in out]
+        extra += [it[0] for it in etf_items() if it[2] in ("US", "C") and it[0] not in out and it[0] not in extra]   # 미국 ETF·구성종목
         for i in range(0, len(extra), 20):
             try:
                 out.update(spark_batch(extra[i:i + 20]))
