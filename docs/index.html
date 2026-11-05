@@ -391,6 +391,14 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
 .ez-news a{color:var(--fg);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ez-foot{margin-top:auto;font-size:11px;color:var(--dim);line-height:1.4}
 .ez-go{align-self:flex-start;background:none;border:0;padding:0;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer}
+.etf-op{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.etf-op .big{font-family:var(--font-num);font-size:30px;font-weight:800;line-height:1}
+.etf-op .big.up{color:var(--up)} .etf-op .big.down{color:var(--down)} .etf-op .of{color:var(--muted);font-size:13px}
+.etf-why{margin:10px 0;padding-left:20px;display:grid;gap:5px;font-size:13.5px;line-height:1.55}
+.etf-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.etf-tbl th,.etf-tbl td{padding:6px 8px;border-bottom:1px solid var(--line-2);text-align:left}
+.etf-tbl tr[data-go]:hover td{background:var(--panel-2)}
+.etf-tbl .up{color:var(--up)} .etf-tbl .down{color:var(--down)}
 .tone{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap;flex:none}
 .tone.good{background:var(--up-bg);color:var(--up)} .tone.bad{background:var(--down-bg);color:var(--down)} .tone.neutral{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
 .tone.rule{opacity:.85}
@@ -736,6 +744,11 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
       <div class="ph"><h2 id="h-earn">실적 발표 일정</h2></div>
       <div class="pb"><ul class="earn" id="earn"></ul><div class="more-wrap" id="earnMore"></div>
         <p class="hint">날짜는 미국 현지 기준이에요. 장 마감 후 발표면 한국 시간으로 다음 날 새벽입니다.</p></div>
+    </section>
+
+    <section class="panel stock-only" aria-labelledby="h-etf" id="etfPanel" hidden>
+      <div class="ph"><h2 id="h-etf">ETF 구성종목 분석</h2><span class="muted" id="etfSub" style="font-size:12px"></span></div>
+      <div class="pb" id="etfBody"></div>
     </section>
 
     <section class="panel news-panel" aria-labelledby="h-news">
@@ -1418,7 +1431,7 @@ const TA = (() => {
     if (typeof LIVE !== "undefined" && LIVE.mode === "browser" && LIVE.auto && !LIVE.busy && LIVE.state !== "needs"){
       LIVE.busy = true; fetchBars(sym).then(async got => { if (got !== false) await blankPane(); if (LIVE.bars[sym] && LIVE.lastQs) saveQuotes(LIVE.lastQs, false); }).finally(() => { LIVE.busy = false; }); }
     if (TA_STATE.sym && TA_STATE.sym !== sym) hideTA();
-    if (S.mode === "stock"){ $("#stockBarT").textContent = `${nameOf(sym)} · ${sym}`; renderPeers(sym); renderRelated(sym); }
+    if (S.mode === "stock"){ $("#stockBarT").textContent = `${nameOf(sym)} · ${sym}`; renderPeers(sym); renderRelated(sym); renderETF(sym); }
   }
 
   /* ---------- 섹터 히트맵 ---------- */
@@ -1719,7 +1732,7 @@ ${JSON.stringify(need)}`;
     // 데이터 파일 쪽 값이 더 최근 날짜면 그대로 두기
     const newer = {}; [...DATA.watchlist, ...DATA.board.flatMap(g => g.items)].forEach(i => { if (i.date) newer[i.sym] = i.date; });
     const qs = {}; for (const [sym, q] of Object.entries(QT.qs)) if (!(newer[sym] > q.date)) qs[sym] = q;
-    for (const [sym, q] of Object.entries(qs)){ const k = KR.map[sym]; if (k){ k.price = q.price; k.chgPct = q.chgPct; } }
+    for (const [sym, q] of Object.entries(qs)){ const k = KR.map[sym] || ETF.map[sym]; if (k){ k.price = q.price; k.chgPct = q.chgPct; } }
     applyQuotes(qs);
     if (S.mode !== "stock") renderMovers?.();
   }
@@ -2679,6 +2692,99 @@ ${JSON.stringify(data)}`;
     const rows = (await US.shards[key])[sym];
     return rows?.length ? rows.map(r => r.slice()) : null;
   }
+  /* ETF: 목록·일봉·구성종목 (GitHub이 하루 두 번 갱신) */
+  const ETF = { idx: null, map: {}, shards: {}, loading: null, hold: null, holdP: null };
+  function loadETF(){
+    if (ETF.loading) return ETF.loading;
+    ETF.loading = fetchD("etf/index.json").then(r => r.ok ? r.json() : null).then(j => {
+      if (!j) return; ETF.idx = j;
+      j.items.forEach(([sym, name, kind, price, chgPct, aum, hasH]) => ETF.map[sym] = { sym, name, kind, price, chgPct, aum, hasH });
+      if (typeof QT !== "undefined" && QT.qs) for (const k of Object.values(ETF.map)){ const q = QT.qs[k.sym]; if (q){ k.price = q.price; k.chgPct = q.chgPct; } }
+      IDX = null;
+    }).catch(() => {});
+    return ETF.loading;
+  }
+  const isETF = sym => ["KR", "US"].includes(ETF.map[sym]?.kind);
+  async function etfCandles(sym){
+    await loadETF(); if (!ETF.map[sym]) return null;
+    let h = 0; for (const ch of sym) h = (h * 31 + ch.charCodeAt(0)) % 1000003;
+    const key = String(h % (ETF.idx?.shards || 32)).padStart(2, "0");
+    if (!ETF.shards[key]) ETF.shards[key] = fetchD(`etf/s${key}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    const rows = (await ETF.shards[key])[sym];
+    return rows?.length ? rows.map(r => r.slice()) : null;
+  }
+  const loadHoldings = () => ETF.holdP || (ETF.holdP = fetchD("etf/holdings.json").then(r => r.ok ? r.json() : null).then(j => (ETF.hold = j)).catch(() => null));
+  async function candlesAny(sym){
+    if (DATA?.candles?.[sym]) return DATA.candles[sym];
+    if (KR.map[sym]) return krCandles(sym);
+    if (ETF.map[sym]) return etfCandles(sym);
+    if (US.map[sym]) return usCandles(sym);
+    return null;
+  }
+  const sigOf = sc => sc >= 70 ? "매수 우위" : sc >= 57 ? "분할 매수 관점" : sc > 43 ? "관망" : sc > 30 ? "비중 축소 관점" : "매도 우위";
+  const LEV_RE = /레버리지|인버스|선물|2X|3X|Ultra|Bull|Bear|Leveraged|Inverse/i;
+  const LEV_SYMS = new Set(["TQQQ", "SQQQ", "SOXL", "SOXS", "UPRO", "SPXU", "TNA", "TZA", "LABU", "FNGU", "NVDL", "TSLL", "CONL", "BITX"]);
+  /* ETF 구성종목 분석: 구성종목마다 같은 기술적 분석을 돌리고 비중으로 묶어 ETF 의견을 냄 */
+  async function etfAnalysis(sym){
+    await Promise.all([loadETF(), loadKR(), loadUS()]);
+    const H = await loadHoldings(), rec = H?.[sym];
+    const own = DATA?.candles?.[sym] || await candlesAny(sym);
+    const ownAn = own?.length >= 60 ? TA.analyze(own.map(r => ({ time: r[0], open: r[1], high: r[2], low: r[3], close: r[4], volume: r[5] }))) : null;
+    const meta = ETF.map[sym] || {}, name = meta.name || nameOf(sym);
+    const lev = LEV_SYMS.has(sym) || LEV_RE.test(name);
+    if (!rec?.h?.length) return { sym, name, lev, own: ownAn ? { score: ownAn.score, chg20: ownAn.chg20 } : null, rows: [], cover: 0, asOf: null, src: null };
+    const rows = await Promise.all(rec.h.map(async ([s, nm, w]) => {
+      let raw = null; try { raw = s ? await candlesAny(s) : null; } catch {}
+      const an = raw?.length >= 60 ? TA.analyze(raw.map(r => ({ time: r[0], open: r[1], high: r[2], low: r[3], close: r[4], volume: r[5] }))) : null;
+      return { sym: s, name: KR.map[s]?.name || (typeof EZ_KO !== "undefined" && EZ_KO[s]) || nm || s, w: +w || 0,
+        score: an?.score ?? null, chg20: an?.chg20 ?? null, up60: an ? an.close > an.ma[60] : null, signal: an?.signal || null };
+    }));
+    const ok = rows.filter(r => r.score != null), wAll = rows.reduce((a, r) => a + r.w, 0) || 1, wOk = ok.reduce((a, r) => a + r.w, 0);
+    const res = { sym, name, lev, rows, asOf: rec.asOf, src: rec.src, own: ownAn ? { score: ownAn.score, chg20: ownAn.chg20, signal: ownAn.signal } : null,
+      cover: Math.round(wOk / wAll * 100), topW: Math.round(wAll), top3: Math.round(rows.slice().sort((a, b) => b.w - a.w).slice(0, 3).reduce((a, r) => a + r.w, 0)) };
+    if (!wOk) return res;
+    res.wScore = Math.round(ok.reduce((a, r) => a + r.score * r.w, 0) / wOk);
+    res.breadth = Math.round(ok.filter(r => r.up60).reduce((a, r) => a + r.w, 0) / wOk * 100);
+    res.ret20 = Math.round(ok.reduce((a, r) => a + (r.chg20 || 0) * r.w, 0) / wOk * 10) / 10;
+    const contrib = ok.map(r => ({ ...r, c: (r.score - 50) * r.w })).sort((a, b) => b.c - a.c);
+    res.pull = contrib.filter(r => r.c > 0).slice(0, 2); res.drag = contrib.filter(r => r.c < 0).slice(-2).reverse();
+    res.score = Math.round(res.own ? 0.6 * res.wScore + 0.4 * res.own.score : res.wScore);
+    res.signal = sigOf(res.score);
+    // 논리적 근거 (순서: 구성종목 → 넓이 → 수익률 비교 → 끌어올림/끌어내림 → 위험)
+    const R = [];
+    R.push(`구성종목 비중 가중 기술 점수 ${res.wScore}점(${sigOf(res.wScore)})${res.own ? `, ETF 자체 차트 점수 ${res.own.score}점(${res.own.signal})` : ""} → 6:4로 합쳐 ${res.score}점`);
+    R.push(`비중 기준 ${res.breadth}%가 60일선 위 → ${res.breadth >= 65 ? "여러 종목이 함께 오르는 건강한 흐름" : res.breadth >= 40 ? "종목별로 엇갈리는 흐름" : "대부분 약세라 반등은 소수 종목에 기대는 상태"}`);
+    if (res.own?.chg20 != null) R.push(`최근 20거래일 구성종목 가중 수익률 ${res.ret20 >= 0 ? "+" : ""}${res.ret20}% vs ETF ${res.own.chg20 >= 0 ? "+" : ""}${res.own.chg20}%`);
+    if (res.pull.length) R.push(`끌어올리는 종목: ${res.pull.map(r => `${r.name}(${r.score}점·비중 ${r.w}%)`).join(", ")}`);
+    if (res.drag.length) R.push(`끌어내리는 종목: ${res.drag.map(r => `${r.name}(${r.score}점·비중 ${r.w}%)`).join(", ")}`);
+    if (res.top3 >= 45) R.push(`상위 3종목이 ${res.top3}%를 차지 → 몇 종목 실적·뉴스에 크게 흔들릴 수 있어요`);
+    if (lev) R.push(`레버리지·인버스 상품 → 매일 비율을 다시 맞추기 때문에 오르내림이 반복되면 지수보다 손실이 커질 수 있어요. 단기 매매용으로만 보세요`);
+    if (res.cover < 80) R.push(`분석 가능한 비중은 ${res.cover}%예요 (나머지는 일봉 자료가 없어 빠졌어요)`);
+    res.reasons = R;
+    return res;
+  }
+  function etfHTML(a, compact){
+    if (!a) return "";
+    if (!a.rows.length) return `<p class="muted" style="margin:0">이 ETF는 구성종목 자료가 아직 없어요. 국내 ETF는 순자산 상위 300개, 미국은 주요 ETF만 구성종목을 받아요.${a.own ? ` ETF 자체 차트 점수는 ${a.own.score}점(${esc(a.own.signal)})이에요.` : ""}${a.lev ? " 레버리지·인버스 상품이라 단기 매매용으로만 보세요." : ""}</p>`;
+    const tone = a.score >= 57 ? "up" : a.score <= 43 ? "down" : "";
+    const rows = a.rows.slice().sort((x, y) => y.w - x.w);
+    return `<div class="etf-op"><span class="big ${tone}">${a.score ?? "–"}</span><span class="of">/ 100</span><span class="pill-sig ${tone}">${esc(a.signal || "자료 부족")}</span><small class="muted" style="margin-left:auto">구성종목 ${a.rows.length}개 · ${esc(a.asOf || "")} 기준 · ${esc(a.src || "")}</small></div>
+      ${a.reasons ? `<ol class="etf-why">${a.reasons.map(t => `<li>${esc(t)}</li>`).join("")}</ol>` : ""}
+      ${compact ? "" : `<div class="tbl-wrap"><table class="etf-tbl"><thead><tr><th>구성종목</th><th>비중</th><th>점수</th><th>20일</th><th>60일선</th></tr></thead><tbody>
+      ${rows.map(r => `<tr ${r.sym && (DATA?.candles?.[r.sym] || KR.map[r.sym] || US.map[r.sym] || ETF.map[r.sym]) ? `data-go="${esc(r.sym)}" data-go-name="${esc(r.name)}" style="cursor:pointer"` : ""}><td>${esc(r.name)} <small class="muted num">${esc(r.sym || "")}</small></td><td class="num">${r.w.toFixed(1)}%</td>
+        <td>${r.score != null ? `<span class="pill-sig ${r.score >= 57 ? "up" : r.score <= 43 ? "down" : ""}" style="font-size:11.5px;padding:1px 8px">${r.score}</span>` : '<span class="muted">–</span>'}</td>
+        <td class="num ${cls(r.chg20)}">${r.chg20 != null ? fmtPct(r.chg20) : "–"}</td><td>${r.up60 == null ? "–" : r.up60 ? '<span class="up">위</span>' : '<span class="down">아래</span>'}</td></tr>`).join("")}</tbody></table></div>`}
+      <p class="hint" style="margin:8px 0 0">구성종목마다 이동평균·RSI·MACD·패턴으로 0~100점을 매기고 비중으로 평균 낸 값이에요. 규칙 기반 참고 의견이고, 구성종목 비중은 일주일에 한 번 갱신돼요.</p>`;
+  }
+  async function renderETF(sym){
+    const box = $("#etfPanel"); if (!box) return;
+    await loadETF();
+    if (!isETF(sym)){ box.hidden = true; return; }
+    box.hidden = false; $("#etfBody").innerHTML = `<p class="muted" style="margin:0">구성종목을 분석하는 중…</p>`; $("#etfSub").textContent = ETF.map[sym]?.kind === "KR" ? "국내 ETF" : "미국 ETF";
+    const a = await etfAnalysis(sym);
+    if (S.sel !== sym) return;
+    $("#etfBody").innerHTML = etfHTML(a);
+  }
   async function krCandles(sym){
     const n = krShardOf(sym), key = String(n).padStart(2, "0");
     if (!KR.shards[key]) KR.shards[key] = fetchD(`kr/s${key}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
@@ -2764,6 +2870,7 @@ ${JSON.stringify(data)}`;
     (UNIVERSE || []).forEach(([sym, name, mk]) => add(sym, name, "", "", mk));
     Object.values(KR.map).forEach(k => add(k.sym, k.name, "", "", k.mk));
     Object.values(US.map).forEach(u => add(u.sym, u.name, "", "", "US"));
+    Object.values(ETF.map).forEach(x => { if (x.kind !== "C") add(x.sym, x.name, "ETF", "", "ETF"); });
     if (PF?.investors) for (const [id, v] of Object.entries(PF.investors)) (v.holdings || []).forEach(h => h.sym && !/\s/.test(h.sym) && add(h.sym, "", h.name, v.name + " 보유"));
     for (const e of m.values()){ e.n = norm(e.name); e.a = norm(e.alt); e.s = norm(e.sym); e.c = chosung(e.name.replace(/\s/g, "")); e.j = jamo(e.n); }
     return [...m.values()];
@@ -2797,7 +2904,7 @@ ${JSON.stringify(data)}`;
     sugg = search(q); active = sugg.length ? 0 : -1;
     if (!q.trim()){ box.hidden = true; $("#searchBox").setAttribute("aria-expanded", false); return; }
     box.innerHTML = sugg.length ? sugg.map((e, i) => {
-      const has = !!DATA?.candles?.[e.sym] || !!KR.map[e.sym] || !!US.map[e.sym], live = quoteOf(e.sym) || QT.qs?.[e.sym], qt = live || KR.map[e.sym] || US.map[e.sym];
+      const has = !!DATA?.candles?.[e.sym] || !!KR.map[e.sym] || !!US.map[e.sym] || !!ETF.map[e.sym], live = quoteOf(e.sym) || QT.qs?.[e.sym], qt = live || KR.map[e.sym] || US.map[e.sym] || ETF.map[e.sym];
       // 현재가 묶음에 없는 국내 종목은 저장된 일봉 기준 → 그 날짜를 같이 표시
       const asOf = !live && KR.map[e.sym] && KR.idx?.asOf ? `<small class="sr-asof num">${KR.idx.asOf.slice(5).replace("-", ".")} 종가</small>` : "";
       const right = qt?.price != null ? `<span class="num">${fmtPrice(qt.price, e.sym, qt.unit)}</span><span class="num ${cls(qt.chgPct)}">${fmtPct(qt.chgPct)}</span>${asOf}`
@@ -2854,6 +2961,16 @@ ${JSON.stringify(data)}`;
         g.items = g.items.slice(0, 12); IDX = null; renderBoard();
       }
     }
+    if (!DATA.candles[e.sym]){ await loadETF(); }
+    if (!DATA.candles[e.sym] && ETF.map[e.sym]){
+      const raw = await etfCandles(e.sym);
+      if (raw?.length){
+        DATA.candles[e.sym] = raw;
+        let g = DATA.board.find(x => x.id === "_search"); if (!g){ g = { id: "_search", label: "검색", items: [] }; DATA.board.push(g); }
+        if (!g.items.some(i => i.sym === e.sym)) g.items.unshift({ sym: e.sym, name: ETF.map[e.sym].name || e.name, ...quoteFromCandles(raw), mcap: ETF.map[e.sym].aum || null, currency: /\.(KS|KQ)$/.test(e.sym) ? "KRW" : "USD" });
+        g.items = g.items.slice(0, 12); IDX = null; renderBoard();
+      }
+    }
     if (!DATA.candles[e.sym] && !/\.(KS|KQ|KN)$/.test(e.sym)){
       const raw = await usCandles(e.sym);
       if (raw?.length){
@@ -2878,7 +2995,7 @@ ${JSON.stringify(data)}`;
   }
   const sb = $("#searchBox");
   sb.addEventListener("input", () => renderSugg(sb.value));
-  sb.addEventListener("focus", () => { IDX = null; loadUniverse(); Promise.all([loadKR(), loadUS()]).then(() => { if (sb.value) renderSugg(sb.value); }); if (sb.value) renderSugg(sb.value); });
+  sb.addEventListener("focus", () => { IDX = null; loadUniverse(); Promise.all([loadKR(), loadUS(), loadETF()]).then(() => { if (sb.value) renderSugg(sb.value); }); if (sb.value) renderSugg(sb.value); });
   sb.addEventListener("keydown", e => {
     if (e.key === "ArrowDown"){ e.preventDefault(); moveActive(1); }
     else if (e.key === "ArrowUp"){ e.preventDefault(); moveActive(-1); }
@@ -3097,7 +3214,7 @@ ${JSON.stringify(data)}`;
       <ol>${m.steps.map(st => `<li>${esc(st.t)}<span>${st.ms != null ? st.ms + "ms" : "…"}</span></li>`).join("")}</ol></details>` : "";
     const wait = m.waiting ? `<div class="answer muted"><span class="spin" aria-hidden="true" style="display:inline-block;vertical-align:-2px"></span> 답변 준비 중 · <span class="num" id="chatWait">0초</span></div>` : "";
     const chips = m.chips?.length && idx === CHAT.msgs.length - 1 && !CHAT.busy ? `<div class="chips">${m.chips.map(q => `<button type="button" class="chip-q" data-chat-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : "";
-    return `<div class="msg-a"><span class="who">&gt;_ AI 애널리스트</span>${steps}${mktCardHTML(m.mcard)}${cardHTML(m.card)}${vizCardHTML(m.viz)}${m.text ? `<div class="answer">${mdLite(m.text)}</div>` : ""}${newsCardHTML(m.news)}${m.note ? `<div class="answer"><p class="muted">${esc(m.note)}</p></div>` : ""}${wait}${chips}</div>`;
+    return `<div class="msg-a"><span class="who">&gt;_ AI 애널리스트</span>${steps}${mktCardHTML(m.mcard)}${cardHTML(m.card)}${m.etf ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">ETF 구성종목 분석</span><b>${esc(m.etf.name || "")}</b></div>${etfHTML(m.etf, false)}</div>` : ""}${vizCardHTML(m.viz)}${m.text ? `<div class="answer">${mdLite(m.text)}</div>` : ""}${newsCardHTML(m.news)}${m.note ? `<div class="answer"><p class="muted">${esc(m.note)}</p></div>` : ""}${wait}${chips}</div>`;
   }
   function renderChat(){
     const log = $("#chatLog");
@@ -3117,7 +3234,7 @@ ${JSON.stringify(data)}`;
   const scrollChat = () => { const last = $("#chatLog").lastElementChild; last?.scrollIntoView({ block: "end", behavior: "smooth" }); };
 
   async function resolveStock(text){
-    await Promise.all([loadKR(), loadUS()]); if (API.on) await loadUniverse();
+    await Promise.all([loadKR(), loadUS(), loadETF()]); if (API.on) await loadUniverse();
     IDX = IDX || buildIndex();
     const nt = norm(text), up = text.match(/[A-Z0-9][A-Z0-9.\-=^]{1,14}/g) || [];
     let best = null;
@@ -3172,6 +3289,7 @@ ${JSON.stringify(data)}`;
 - "반드시 오른다" 같은 확정 표현 대신 조건과 가능성으로 말해. 투자 권유가 아니라 참고 의견이라는 톤을 유지해.
 - 국내 시세는 약 15~20분 지연될 수 있어.
 - 데이터에 '시장국면'이 있으면 시장 전체·하락장 질문에 그걸 근거로 답해. 하락장이 온다/안 온다를 단정하지 말고, 지금 위험도와 근거, 하락장 신호가 강해지는 조건(예: 코스피·S&P 500의 200일선 이탈, 1년 고점 대비 -20%, VIX 30 이상, 금리·환율 급등)과 약해지는 조건을 나눠 말해. 위험도 점수는 바꾸지 말고 해석만 해.
+- 데이터에 'ETF구성종목분석'이 있으면 이 ETF의 매매의견은 그걸 중심으로 논리적으로 세워: ① 구성종목 흐름(가중 점수, 60일선 위 비중) → ② ETF 자체 차트와 같은 방향인지 → ③ 끌어올리는/끌어내리는 종목과 그 이유(뉴스가 있으면) → ④ 쏠림·레버리지 같은 상품 위험 → ⑤ 결론(매수/관망/비중 축소 중 무엇이고 어떤 조건이면 바뀌는지). 점수는 바꾸지 말고 해석만 해.
 - 종목 질문이어도 '시장국면'이 있으면, 시장 흐름이 이 종목에 주는 영향을 한두 문장 덧붙여.
 - 기준일이 오늘보다 며칠 이상 오래됐으면 그렇다고 밝혀. 오늘은 ${kstDay(Date.now())}야.
 - ${easy ? "쉬운 설명 모드: 주식을 처음 하는 사람도 알도록 전문용어(RSI, MACD, ATR 등)는 한 번씩 쉬운 말로 풀어 줘." : "간결하게, 핵심부터."}
@@ -3220,6 +3338,10 @@ ${JSON.stringify(ctx)}
         const raw = DATA.candles[e.sym], qt = quoteOf(e.sym) || quoteFromCandles(raw);
         an = await step("기술적 분석 (이평선·RSI·MACD·패턴)", () => TA.analyze(raw.map(r => ({ time: r[0], open: r[1], high: r[2], low: r[3], close: r[4], volume: r[5] }))));
         if (an){ m.card = buildCard(e, an, qt); m.viz = vizData(e.sym, raw, an, m.card); }
+        if (isETF(e.sym)){
+          const ea = await step("ETF 구성종목 분석 (종목별 기술 점수 · 비중 가중)", () => etfAnalysis(e.sym));
+          if (ea){ m.etf = { ...ea, rows: ea.rows.map(r => ({ sym: r.sym, name: r.name, w: r.w, score: r.score, chg20: r.chg20, up60: r.up60 })) }; }
+        }
         const news = await step("관련 뉴스 확인", async () => {
           if (!API.on) await fetchNewsBrowser(e.sym);
           if (API.on && !NEWS_CACHE[e.sym]){ try { const r = await fetch(`api/news?sym=${encodeURIComponent(e.sym)}&name=${encodeURIComponent(e.name)}`, { signal: ctl.signal }); if (r.ok) NEWS_CACHE[e.sym] = (await r.json()).items || []; } catch {} }
@@ -3235,6 +3357,10 @@ ${JSON.stringify(ctx)}
           최근10봉_일자_시_고_저_종_거래량: raw.slice(-10),
           뉴스제목: news.map((n, i) => `[${i + 1}] ${(n.time || "").slice(0, 10)} ${n.source || ""}: ${n.title}${TR[n.title] ? " (" + TR[n.title] + ")" : ""}`),
           재무데이터: "없음 (이 터미널은 재무제표를 받지 않음)" };
+        if (m.etf) ctx.ETF구성종목분석 = m.etf.rows.length ? { 종합_규칙기반_점수: m.etf.score, 의견: m.etf.signal, 구성종목_가중점수: m.etf.wScore, ETF자체_점수: m.etf.own?.score,
+          비중기준_60일선위_퍼센트: m.etf.breadth, 구성종목_20일_가중수익률: m.etf.ret20, 상위3종목_비중: m.etf.top3, 분석가능비중: m.etf.cover, 레버리지_인버스: m.etf.lev,
+          근거: m.etf.reasons, 구성종목: m.etf.rows.map(r => `${r.name}(${r.sym}) 비중${r.w}% 점수${r.score ?? "없음"} 20일${r.chg20 ?? "–"}% ${r.up60 == null ? "" : r.up60 ? "60일선위" : "60일선아래"}`), 기준일: m.etf.asOf, 출처: m.etf.src }
+          : "구성종목 자료 없음 (ETF 자체 차트만 분석)";
         if (wantMkt) await step("시장 지표 확인 (지수 추세·VIX·금리·환율)", () => loadMarketHist(true));
         const reg = marketRegime();
         if (reg){ ctx.시장국면 = mktCtx(reg); if (wantMkt) m.mcard = reg; }
@@ -3324,7 +3450,7 @@ ${JSON.stringify(ctx)}
     const same = S.sel === sym;
     setMode("stock");
     if (!same) select(sym);   // select가 종목 화면의 업종·연관 종목까지 그려요
-    else { renderChart(); $("#stockBarT").textContent = `${nameOf(sym)} · ${sym}`; renderPeers(sym); renderRelated(sym); }
+    else { renderChart(); $("#stockBarT").textContent = `${nameOf(sym)} · ${sym}`; renderPeers(sym); renderRelated(sym); renderETF(sym); }
     requestAnimationFrame(() => requestAnimationFrame(fitChart));   // 홈에서 숨겨져 있던 차트 크기 다시 맞추기
     if (push){ try { history.pushState({ sym }, "", "#s=" + encodeURIComponent(sym)); } catch {} }
     if (was !== "stock" || push) window.scrollTo({ top: 0 });
@@ -3369,7 +3495,7 @@ ${JSON.stringify(ctx)}
   MORE_RENDER.mv = renderMovers;
   $("#moverSeg").addEventListener("click", e => { const b = e.target.closest("[data-mv]"); if (!b) return; S.mv = b.dataset.mv; S.more.mv = false;
     $("#moverSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderMovers(); });
-  for (const id of ["#movers", "#peers", "#related", "#earn", "#earnAlert"]){
+  for (const id of ["#movers", "#peers", "#related", "#earn", "#earnAlert", "#etfBody"]){
     $(id).addEventListener("click", e => { const li = e.target.closest("[data-go]"); if (li) openFromList(li.dataset.go, li.dataset.goName); });
     $(id).addEventListener("keydown", e => { const li = e.target.closest("[data-go]"); if (li && e.key === "Enter") openFromList(li.dataset.go, li.dataset.goName); });
   }
