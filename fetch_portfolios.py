@@ -234,6 +234,34 @@ def build_13f(inv, prev_entry, cache):
 
 
 # ------------------------------------------------------------------ ARK 일일 매매
+def ark_diff(old, snap):
+    """두 날의 ARK 보유내역 비교 → 실제 매매만.
+    ETF에 돈이 들어오거나(설정) 빠지면(환매) 모든 종목 주식 수가 같은 비율로 늘거나 줄어요.
+    그건 매매가 아니므로, 펀드별로 '보통 변화율(중앙값)'을 빼고 남는 변화가 1% 넘을 때만 매수·매도로 봐요."""
+    from statistics import median
+    trades, ratio = [], {}
+    for k, r in snap.items():
+        o = old.get(k)
+        if o and o["shares"]:
+            ratio.setdefault(r["fund"], []).append(r["shares"] / o["shares"] - 1)
+    flow = {f: median(v) for f, v in ratio.items() if v}
+    for k, r in snap.items():
+        o = old.get(k)
+        if o is None:
+            trades.append({**r, "side": "new", "chgShares": r["shares"]})
+            continue
+        if not o["shares"]:
+            continue
+        expect = o["shares"] * (1 + flow.get(r["fund"], 0))
+        d = r["shares"] - expect
+        if abs(d) / o["shares"] > 0.01:
+            trades.append({**r, "side": "buy" if d > 0 else "sell", "chgShares": round(d)})
+    for k, o in old.items():
+        if k not in snap:
+            trades.append({**o, "side": "exit", "chgShares": -o["shares"], "shares": 0})
+    return trades
+
+
 def ark_daily(entry):
     prev_snap = json.loads(ARK_LAST.read_text(encoding="utf-8")) if ARK_LAST.exists() else {}
     snap, fund_date = {}, {}
@@ -273,17 +301,7 @@ def ark_daily(entry):
     trades = []
     if prev_snap and prev_snap.get("asOf") != as_of:
         old = {k: o for k, o in prev_snap.get("rows", {}).items() if o.get("fund") in live_funds}   # 같은 펀드끼리만 비교
-        for k, r in snap.items():
-            o = old.get(k)
-            if o is None:
-                trades.append({**r, "side": "new", "chgShares": r["shares"]})
-            else:
-                d = r["shares"] - o["shares"]
-                if o["shares"] and abs(d) / o["shares"] > 0.002:
-                    trades.append({**r, "side": "buy" if d > 0 else "sell", "chgShares": d})
-        for k, o in old.items():
-            if k not in snap:
-                trades.append({**o, "side": "exit", "chgShares": -o["shares"], "shares": 0})
+        trades += ark_diff(old, snap)
     ARK_LAST.parent.mkdir(parents=True, exist_ok=True)
     ARK_LAST.write_text(json.dumps({"asOf": as_of, "rows": snap}, ensure_ascii=False), encoding="utf-8")
     if trades:
