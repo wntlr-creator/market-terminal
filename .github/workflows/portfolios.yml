@@ -25,6 +25,9 @@ jobs:
       - run: pip install -r requirements.txt
       - name: 국내 전 종목 일봉 (무료 marcap 데이터)
         run: python build_kr.py
+      - name: 미국 주요 종목 일봉 (검색 차트용)
+        run: python build_us.py
+        continue-on-error: true
       - name: 포트폴리오 데이터 받기
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
@@ -34,6 +37,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/portfolios.json docs/kr data/cusip_map.json
+          if [ -d docs/us ]; then git add docs/us; fi
           if [ -f data/ark_last.json ]; then git add data/ark_last.json; fi
           git diff --cached --quiet && exit 0
           git commit -m "kr+portfolios: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"

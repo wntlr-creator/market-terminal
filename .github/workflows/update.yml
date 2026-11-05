@@ -25,11 +25,15 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python fetch_data.py
+      - name: 현재가 묶음 (국내 전 종목 + 미국 주요 종목)
+        run: python build_quotes.py
+        continue-on-error: true
       - name: 변경된 데이터 커밋
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/data.json
+          if [ -f docs/quotes.json ]; then git add docs/quotes.json; fi
           git diff --cached --quiet && exit 0
           git commit -m "data: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
           for i in 1 2 3; do git pull --rebase && git push && exit 0; sleep 5; done

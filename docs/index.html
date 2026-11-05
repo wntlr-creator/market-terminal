@@ -1640,11 +1640,11 @@ ${JSON.stringify(need)}`;
         ? `현재가 <span class="num">${tTxt}</span> <span>(${agoTxt})</span>`
         : `데이터 <span class="num">${m.updated ? kst(m.updated) : "–"}</span> <span>(${ago(m.updated)})</span>`;
     }
-    const live = API.on || STATIC_LIVE || LIVE.mode !== "none";
+    const live = API.on || STATIC_LIVE || mirrorOK || LIVE.mode !== "none";
     if (hasLive && LIVE.from === "server" && sec < 60){ chip.className = "live-chip on"; chip.textContent = "실시간 · 5초"; }
     else if (hasLive && LIVE.mode === "browser" && sec < 1800){ chip.className = "live-chip on"; chip.textContent = LIVE.auto ? "현재가 · 10분마다" : "현재가 · 수동"; }
     else if (LIVE.mode === "browser" && !LIVE.auto){ chip.className = "live-chip warn"; chip.textContent = "현재가 · 수동"; }
-    else if (hasLive && LIVE.mode === "none"){ chip.className = sec < 3600 ? "live-chip on" : "live-chip warn"; chip.textContent = "PC에서 받은 현재가"; }
+    else if (hasLive && LIVE.mode === "none" && !STATIC_LIVE && !mirrorOK){ chip.className = sec < 3600 ? "live-chip on" : "live-chip warn"; chip.textContent = "PC에서 받은 현재가"; }
     else if (LIVE.state === "needs"){ chip.className = "live-chip warn"; chip.textContent = "현재가 켜기"; }
     else if (LIVE.mode !== "none" && LIVE.state === "err"){ chip.className = "live-chip warn"; chip.textContent = "시세 재시도 중"; }
     else if (LIVE.mode !== "none"){ chip.className = "live-chip warn"; chip.textContent = "시세 받는 중"; }
@@ -1663,7 +1663,7 @@ ${JSON.stringify(need)}`;
          <p><button type="button" class="icon-btn" id="liveAuto">${LIVE.auto ? "자동 받기 끄기 (새로고침 때만 받기)" : "자동 받기 켜기 (열 때·10분마다)"}</button></p>
          <p>받은 현재가는 터미널에 함께 올라가서, <b>휴대폰 Claude 앱으로 열어도 같은 현재가</b>가 보여요. 값이 바뀌었을 때, 새로고침을 눌렀을 때, 그리고 1시간마다 올려요.${LIVE.pubT ? ` 마지막으로 올린 시각: <span class="num">${new Date(LIVE.pubT).toLocaleTimeString("en-GB", { timeZone: "Asia/Seoul" })}</span>` : ""}</p>${LIVE.pubErr ? `<p class="muted">휴대폰용 파일: ${esc(LIVE.pubErr)}</p>` : ""}${LIVE.err ? `<p class="muted">최근 오류: ${esc(LIVE.err)}</p>` : ""}${delayNote}`;
     else if (live) html = `<b>${age != null && age < 3 ? "자동 갱신이 켜져 있어요" : "데이터가 " + Math.round(age) + "시간째 그대로예요"}</b>
-         <p>GitHub Actions가 장중엔 10분마다(그 외 30분마다) 시세를, 매일 아침 포트폴리오를 새로 받아와요. 화면은 2분마다 새 파일을 확인해요. GitHub 사정으로 몇 분씩 늦어질 수 있어요.${age != null && age >= 3 ? " 주말·휴장일이면 정상이에요." : ""}</p>`;
+         <p>GitHub Actions가 장중엔 10분마다(그 외 30분마다) 시세를 받아와요. 시세판·관심종목뿐 아니라 <b>국내 전 종목과 미국 주요 종목(약 300개)의 현재가</b>도 함께 갱신돼서, 검색해서 연 종목도 따로 새로고침할 필요가 없어요. 포트폴리오는 하루 두 번 확인해요. 화면은 ${STATIC_LIVE ? 2 : 5}분마다 새 파일을 확인해요. GitHub 사정으로 몇 분씩 늦어질 수 있어요.${age != null && age >= 3 ? " 주말·휴장일이면 정상이에요." : ""}</p>`;
     else if (hasLive) html = `<b>PC에서 마지막으로 받은 현재가예요 (${agoTxt})</b>
          <p>휴대폰 Claude 앱은 직접 시세를 받을 수 없어서, PC의 Claude 데스크톱 앱에서 이 터미널을 열었을 때 받아 둔 현재가를 보여줘요. PC에서 이 화면이 열려 있으면 10분마다 바뀌고, 여기에도 자동으로 반영돼요.</p>
          <p>PC 없이 휴대폰에서 바로 갱신하려면 설치 가이드의 GitHub Pages(장중 10분마다)나 Render(5초마다) 주소로 여세요.</p>${delayNote}`;
@@ -1698,6 +1698,31 @@ ${JSON.stringify(need)}`;
     }
     return fetch(path, opt);
   }
+  /* 현재가 묶음: 국내 전 종목 + 미국 주요 종목 (GitHub이 10분마다 갱신) */
+  const QT = { t: 0, qs: null };
+  async function loadQuotes(){
+    if (API.on) return;
+    try {
+      const r = await fetchD("quotes.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return;
+      const j = await r.json();
+      if (j.t !== QT.t || !QT.qs){
+        const qs = {};
+        for (const part of [j.kr, j.us]) for (const [sym, v] of Object.entries(part?.q || {}))
+          qs[sym] = { price: v[0], chg: v[1], chgPct: v[2], open: v[3], high: v[4], low: v[5], date: v[6] };
+        QT.t = j.t; QT.qs = qs; QT.updated = j.updated; QT.names = j.us?.names || {};
+      }
+      applyQT();
+    } catch {}
+  }
+  function applyQT(){
+    if (!QT.qs || !DATA) return;
+    // 데이터 파일 쪽 값이 더 최근 날짜면 그대로 두기
+    const newer = {}; [...DATA.watchlist, ...DATA.board.flatMap(g => g.items)].forEach(i => { if (i.date) newer[i.sym] = i.date; });
+    const qs = {}; for (const [sym, q] of Object.entries(QT.qs)) if (!(newer[sym] > q.date)) qs[sym] = q;
+    for (const [sym, q] of Object.entries(qs)){ const k = KR.map[sym]; if (k){ k.price = q.price; k.chgPct = q.chgPct; } }
+    applyQuotes(qs);
+    if (S.mode !== "stock") renderMovers?.();
+  }
   async function load(){
     const wasManual = S.manual;
     try {
@@ -1720,6 +1745,7 @@ ${JSON.stringify(need)}`;
       ["board", "watchlist", "sectors", "earnings", "news"].forEach(k => DATA[k] = DATA[k] || []);
       DATA.candles = DATA.candles || {};
       renderAll();
+      loadQuotes();
       if (LIVE.mode === "server" || (LIVE.mode === "browser" && (LIVE.auto || wasManual))) liveTick(true, wasManual); else if (LIVE.t) reloadSaved();
     } catch (e) {
       if (!DATA){
@@ -2124,9 +2150,8 @@ ${JSON.stringify(need)}`;
     else {
       try { LIVE.mcp = await window.claude?.use?.("mcp"); } catch { LIVE.mcp = null; }
       try { LIVE.art = await window.claude?.use?.("artifact"); } catch { LIVE.art = null; }
-      if (LIVE.mcp){
-        try { const lt = await LIVE.mcp.listTools(BROWSER); if (lt?.servers?.length) LIVE.mode = "browser"; } catch { LIVE.mode = "browser"; }
-      }
+      // 앱 브라우저 창은 쓰지 않아요 (PC 화면 아래에 창이 뜨지 않도록). 현재가는 GitHub이 10분마다 만드는 quotes.json으로 받아요.
+      LIVE.mcp = null;
     }
     renderUpd();
     if (LIVE.mode === "none") return;
@@ -2630,9 +2655,29 @@ ${JSON.stringify(data)}`;
       if (!j) return;
       KR.idx = j; KR.dates = j.dates;
       j.items.forEach(([sym, name, mk, close, chg, mcap]) => KR.map[sym] = { sym, name, mk, price: close, chgPct: chg, mcap });
+      if (typeof QT !== "undefined" && QT.qs) for (const k of Object.values(KR.map)){ const q = QT.qs[k.sym]; if (q){ k.price = q.price; k.chgPct = q.chgPct; } }
       IDX = null;
     }).catch(() => {});
     return KR.loading;
+  }
+  /* 미국 주요 종목 일봉 묶음 (GitHub이 하루 두 번 갱신) */
+  const US = { idx: null, map: {}, shards: {}, loading: null };
+  function loadUS(){
+    if (US.loading) return US.loading;
+    US.loading = fetchD("us/index.json").then(r => r.ok ? r.json() : null).then(j => {
+      if (!j) return; US.idx = j;
+      j.items.forEach(([sym, name, price, chgPct, mcap]) => US.map[sym] = { sym, name, price, chgPct, mcap });
+      IDX = null;
+    }).catch(() => {});
+    return US.loading;
+  }
+  async function usCandles(sym){
+    await loadUS(); if (!US.map[sym]) return null;
+    let h = 0; for (const ch of sym) h = (h * 31 + ch.charCodeAt(0)) % 1000003;
+    const key = String(h % (US.idx?.shards || 16)).padStart(2, "0");
+    if (!US.shards[key]) US.shards[key] = fetchD(`us/s${key}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    const rows = (await US.shards[key])[sym];
+    return rows?.length ? rows.map(r => r.slice()) : null;
   }
   async function krCandles(sym){
     const n = krShardOf(sym), key = String(n).padStart(2, "0");
@@ -2718,6 +2763,7 @@ ${JSON.stringify(data)}`;
     Object.keys(DATA?.candles || {}).forEach(s => add(s, nameOf(s)));
     (UNIVERSE || []).forEach(([sym, name, mk]) => add(sym, name, "", "", mk));
     Object.values(KR.map).forEach(k => add(k.sym, k.name, "", "", k.mk));
+    Object.values(US.map).forEach(u => add(u.sym, u.name, "", "", "US"));
     if (PF?.investors) for (const [id, v] of Object.entries(PF.investors)) (v.holdings || []).forEach(h => h.sym && !/\s/.test(h.sym) && add(h.sym, "", h.name, v.name + " 보유"));
     for (const e of m.values()){ e.n = norm(e.name); e.a = norm(e.alt); e.s = norm(e.sym); e.c = chosung(e.name.replace(/\s/g, "")); e.j = jamo(e.n); }
     return [...m.values()];
@@ -2751,8 +2797,8 @@ ${JSON.stringify(data)}`;
     sugg = search(q); active = sugg.length ? 0 : -1;
     if (!q.trim()){ box.hidden = true; $("#searchBox").setAttribute("aria-expanded", false); return; }
     box.innerHTML = sugg.length ? sugg.map((e, i) => {
-      const has = !!DATA?.candles?.[e.sym] || !!KR.map[e.sym], live = quoteOf(e.sym), qt = live || KR.map[e.sym];
-      // 아직 안 연 국내 종목은 저장된 일봉 기준 → 그 날짜를 같이 표시
+      const has = !!DATA?.candles?.[e.sym] || !!KR.map[e.sym] || !!US.map[e.sym], live = quoteOf(e.sym) || QT.qs?.[e.sym], qt = live || KR.map[e.sym] || US.map[e.sym];
+      // 현재가 묶음에 없는 국내 종목은 저장된 일봉 기준 → 그 날짜를 같이 표시
       const asOf = !live && KR.map[e.sym] && KR.idx?.asOf ? `<small class="sr-asof num">${KR.idx.asOf.slice(5).replace("-", ".")} 종가</small>` : "";
       const right = qt?.price != null ? `<span class="num">${fmtPrice(qt.price, e.sym, qt.unit)}</span><span class="num ${cls(qt.chgPct)}">${fmtPct(qt.chgPct)}</span>${asOf}`
         : `<span class="sr-tag">${has ? "차트 있음" : API.on || LIVE.mode === "browser" ? "불러오기" : "데이터 없음"}</span>`;
@@ -2808,7 +2854,17 @@ ${JSON.stringify(data)}`;
         g.items = g.items.slice(0, 12); IDX = null; renderBoard();
       }
     }
+    if (!DATA.candles[e.sym] && !/\.(KS|KQ|KN)$/.test(e.sym)){
+      const raw = await usCandles(e.sym);
+      if (raw?.length){
+        DATA.candles[e.sym] = raw;
+        let g = DATA.board.find(x => x.id === "_search"); if (!g){ g = { id: "_search", label: "검색", items: [] }; DATA.board.push(g); }
+        if (!g.items.some(i => i.sym === e.sym)) g.items.unshift({ sym: e.sym, name: e.name, ...quoteFromCandles(raw), mcap: US.map[e.sym]?.mcap, currency: "USD" });
+        g.items = g.items.slice(0, 12); IDX = null; renderBoard();
+      }
+    }
     if (!DATA.candles[e.sym]) return false;
+    if (QT.qs?.[e.sym]) applyQuotes({ [e.sym]: QT.qs[e.sym] });
     // 새로 연 종목에도 받아 둔 현재가·일봉을 바로 반영
     if (LIVE.bars[e.sym]) mergeBars(e.sym, LIVE.bars[e.sym]);
     if (LIVE.lastQs?.[e.sym]) applyQuotes(LIVE.lastQs);
@@ -2822,7 +2878,7 @@ ${JSON.stringify(data)}`;
   }
   const sb = $("#searchBox");
   sb.addEventListener("input", () => renderSugg(sb.value));
-  sb.addEventListener("focus", () => { IDX = null; loadUniverse(); loadKR().then(() => { if (sb.value) renderSugg(sb.value); }); if (sb.value) renderSugg(sb.value); });
+  sb.addEventListener("focus", () => { IDX = null; loadUniverse(); Promise.all([loadKR(), loadUS()]).then(() => { if (sb.value) renderSugg(sb.value); }); if (sb.value) renderSugg(sb.value); });
   sb.addEventListener("keydown", e => {
     if (e.key === "ArrowDown"){ e.preventDefault(); moveActive(1); }
     else if (e.key === "ArrowUp"){ e.preventDefault(); moveActive(-1); }
@@ -3061,7 +3117,7 @@ ${JSON.stringify(data)}`;
   const scrollChat = () => { const last = $("#chatLog").lastElementChild; last?.scrollIntoView({ block: "end", behavior: "smooth" }); };
 
   async function resolveStock(text){
-    await loadKR(); if (API.on) await loadUniverse();
+    await Promise.all([loadKR(), loadUS()]); if (API.on) await loadUniverse();
     IDX = IDX || buildIndex();
     const nt = norm(text), up = text.match(/[A-Z0-9][A-Z0-9.\-=^]{1,14}/g) || [];
     let best = null;

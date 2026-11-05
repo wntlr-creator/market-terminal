@@ -1,5 +1,5 @@
 /* YH 마켓 터미널 서비스 워커: 화면은 오프라인에서도 열리고, 시세는 항상 서버 최신값 우선 */
-const VERSION = "yh-terminal-v2";
+const VERSION = "yh-terminal-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "data.json", "portfolios.json"];
 const CDN = "https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js";
 
