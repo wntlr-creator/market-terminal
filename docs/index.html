@@ -1746,7 +1746,7 @@ ${JSON.stringify(need)}`;
     const ageH = (Date.now() - (Date.parse(m.updated || 0) || 0)) / 36e5;
     if (m.sample){ n.hidden = false; n.innerHTML = `<b>예시 데이터 화면</b> · 실제 시세가 아니라 화면 구성을 보여주는 샘플이에요. <span class="num">fetch_data.py</span>를 실행하면 진짜 시세로 바뀝니다.`; }
     // Claude 앱 안에서 최신 데이터를 못 받는 경우: 오래된 데이터라는 걸 분명히 알리고 앱 주소로 안내
-    else if (window.claude && !mirrorOK && !API.on && ageH > 6){ n.hidden = false; n.innerHTML = `<b>${Math.round(ageH / 24) >= 1 ? Math.round(ageH / 24) + "일" : Math.round(ageH) + "시간"} 전 데이터예요.</b> Claude 앱 안에서는 자동 갱신 데이터를 받지 못해서 점수·의견도 그때 기준이에요. 최신 화면은 <a href="${MIRROR}" target="_blank" rel="noopener noreferrer">설치한 앱(웹사이트)</a>에서 보세요.`; }
+    else if (window.claude && !mirrorOK && !API.on && ageH > 12){ n.hidden = false; n.innerHTML = `<b>${Math.round(ageH / 24) >= 1 ? Math.round(ageH / 24) + "일" : Math.round(ageH) + "시간"} 전 데이터예요.</b> Claude 앱 안 화면은 하루 세 번(오전 8시 47분 · 오후 3시 47분 · 밤 10시 47분) 데이터를 새로 받는데, 최근 갱신이 늦어졌어요. 10분마다 바뀌는 최신 화면은 <a href="${MIRROR}" target="_blank" rel="noopener noreferrer">설치한 앱(웹사이트)</a>에서 보세요.`; }
     else n.hidden = true;
     renderTape(); renderBoard(); renderWatch(); renderChart(); renderHeat(); renderEarn(); renderNews(); renderMovers();
   }
