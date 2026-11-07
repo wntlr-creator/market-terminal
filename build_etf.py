@@ -15,6 +15,7 @@ ETF 데이터 (docs/etf/) — 국내·미국 ETF 검색, 차트, 구성종목 �
 """
 import json
 import os
+import socket
 import re
 import sys
 import time
@@ -34,6 +35,13 @@ SHARDS = 32
 KST = timezone(timedelta(hours=9))
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 LINES = []
+socket.setdefaulttimeout(30)   # 응답 없는 요청에서 멈추지 않게
+T0 = time.time()
+
+
+def over(sec):
+    """이 실행에서 sec초가 지났는지 (외부 사이트가 느릴 때 단계별로 끊기)"""
+    return time.time() - T0 > sec
 
 # 미국 주요 ETF (지수·섹터·테마·원자재·채권·레버리지)
 US_ETFS = """SPY VOO IVV VTI QQQ QQQM DIA IWM RSP VT VEA VWO EFA EEM SCHD VYM DGRO JEPI JEPQ DIVO
@@ -143,6 +151,9 @@ def kr_holdings_wise(codes, kr_by_name, kr_price, us_by_key, us_price, fx):
     out, fails = {}, 0
     dec = json.JSONDecoder()
     for c in codes:
+        if over(600):
+            log("와이즈리포트: 시간 초과로 중단")
+            break
         try:
             html = get(f"https://navercomp.wisereport.co.kr/v2/ETF/index.aspx?cmp_cd={c}")
             i = html.find("var CU_data = ")
@@ -219,6 +230,9 @@ def kr_holdings_naver(codes):
 def us_holdings(syms):
     out, fails = {}, 0
     for s in syms:
+        if over(900):
+            log("미국 구성종목: 시간 초과로 중단")
+            break
         try:
             th = yf.Ticker(s).funds_data.top_holdings
             if th is None or not len(th):
@@ -353,6 +367,9 @@ def main():
     try:
         tk = yf.Tickers(" ".join(us_list))
         for s in us_list:
+            if over(1500):
+                log("미국 ETF 이름: 시간 초과로 중단")
+                break
             try:
                 info = tk.tickers[s].info or {}
                 us_names[s] = info.get("shortName") or info.get("longName") or s
