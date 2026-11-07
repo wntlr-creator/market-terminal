@@ -91,8 +91,8 @@ for (const r of rows){
       r.perBase = Math.round(base * 10) / 10;
     }
     if (r.mkt === "KR" && r.f.roe != null){ v += r.f.roe >= 15 ? 1.5 : r.f.roe >= 8 ? 0.5 : r.f.roe < 0 ? -1.5 : 0; vt.push(`ROE ${r.f.roe.toFixed(1)}%`); }
-    if (r.mkt === "US" && r.f.fper > 0 && r.f.per > 0){ const g = r.f.per / r.f.fper - 1; if (g > 0.1){ v += 0.75; vt.push(`예상 PER ${r.f.fper.toFixed(1)}배 → 이익이 ${Math.round(g * 100)}% 늘 거란 전망`); } else if (g < -0.1){ v -= 0.75; vt.push(`예상 PER ${r.f.fper.toFixed(1)}배 → 이익 감소 전망`); } }
-    if (r.mkt === "US" && r.f.div > 2) vt.push(`배당수익률 ${(+r.f.div).toFixed(1)}%`);
+    if (r.f.fper > 0 && r.f.per > 0){ const g = r.f.per / r.f.fper - 1; if (g > 0.1){ v += 0.75; vt.push(`예상 PER ${r.f.fper.toFixed(1)}배 → 이익이 ${Math.round(g * 100)}% 늘 거란 전망`); } else if (g < -0.1){ v -= 0.75; vt.push(`예상 PER ${r.f.fper.toFixed(1)}배 → 이익 감소 전망`); } }
+    if (r.f.div > 2) vt.push(`배당수익률 ${(+r.f.div).toFixed(1)}%`);
   }
   r.V = r.etf ? null : Math.max(0, Math.min(100, Math.round(50 + v * 12)));
   r.vt = vt;
