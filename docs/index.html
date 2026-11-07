@@ -1700,7 +1700,8 @@ ${JSON.stringify(need)}`;
         ? `현재가 <span class="num">${tTxt}</span> <span>(${agoTxt})</span>`
         : `데이터 <span class="num">${m.updated ? kst(m.updated) : "–"}</span> <span>(${ago(m.updated)})</span>`;
     }
-    const live = API.on || STATIC_LIVE || mirrorOK || LIVE.mode !== "none";
+    const inClaude = !!window.claude && !mirrorOK && !API.on;   // Claude 앱 안: 하루 세 번 옮겨 온 데이터 파일을 읽음
+    const live = API.on || STATIC_LIVE || mirrorOK || inClaude || LIVE.mode !== "none";
     if (hasLive && LIVE.from === "server" && sec < 60){ chip.className = "live-chip on"; chip.textContent = "실시간 · 5초"; }
     else if (hasLive && LIVE.mode === "browser" && sec < 1800){ chip.className = "live-chip on"; chip.textContent = LIVE.auto ? "현재가 · 10분마다" : "현재가 · 수동"; }
     else if (LIVE.mode === "browser" && !LIVE.auto){ chip.className = "live-chip warn"; chip.textContent = "현재가 · 수동"; }
@@ -1709,6 +1710,7 @@ ${JSON.stringify(need)}`;
     else if (LIVE.mode !== "none" && LIVE.state === "err"){ chip.className = "live-chip warn"; chip.textContent = "시세 재시도 중"; }
     else if (LIVE.mode !== "none"){ chip.className = "live-chip warn"; chip.textContent = "시세 받는 중"; }
     else if (API.on && m.refreshing && (age == null || age >= 3)){ chip.className = "live-chip warn"; chip.textContent = "시세 받는 중"; }
+    else if (inClaude){ chip.className = age != null && age < 12 ? "live-chip on" : "live-chip warn"; chip.textContent = age != null && age < 12 ? "하루 3번 갱신" : "갱신 지연"; }
     else if (live && age != null && age < 3){ chip.className = "live-chip on"; chip.textContent = "자동 갱신 중"; }
     else if (live){ chip.className = "live-chip warn"; chip.textContent = "갱신 지연"; }
     else { chip.className = "live-chip off"; chip.textContent = "자동 갱신 꺼짐"; }
@@ -1722,14 +1724,13 @@ ${JSON.stringify(need)}`;
          <p>Claude 앱의 브라우저 창으로 야후 시세를 ${LIVE.auto ? "열 때와 10분마다" : "<b>새로고침을 누를 때만</b>"} 읽어 와요. 받는 1~2초 동안만 브라우저 창에 시세 원본 글자가 보이고, 끝나면 빈 화면으로 돌아가요. 이 창은 앱이 직접 여는 거라 이 화면에서 숨길 수는 없어요.</p>
          <p><button type="button" class="icon-btn" id="liveAuto">${LIVE.auto ? "자동 받기 끄기 (새로고침 때만 받기)" : "자동 받기 켜기 (열 때·10분마다)"}</button></p>
          <p>받은 현재가는 터미널에 함께 올라가서, <b>휴대폰 Claude 앱으로 열어도 같은 현재가</b>가 보여요. 값이 바뀌었을 때, 새로고침을 눌렀을 때, 그리고 1시간마다 올려요.${LIVE.pubT ? ` 마지막으로 올린 시각: <span class="num">${new Date(LIVE.pubT).toLocaleTimeString("en-GB", { timeZone: "Asia/Seoul" })}</span>` : ""}</p>${LIVE.pubErr ? `<p class="muted">휴대폰용 파일: ${esc(LIVE.pubErr)}</p>` : ""}${LIVE.err ? `<p class="muted">최근 오류: ${esc(LIVE.err)}</p>` : ""}${delayNote}`;
+    else if (inClaude) html = `<b>Claude 앱 안 화면은 하루 세 번 데이터를 받아요</b>
+         <p>Claude 앱 안에서는 보안 규칙 때문에 이 화면이 인터넷에서 시세를 직접 가져올 수 없어요. 그래서 GitHub이 10분마다 만드는 데이터를 예약 작업이 <b>매일 오전 8시 47분 · 오후 3시 47분 · 밤 10시 47분</b>에 이 화면으로 옮겨 와요. 지금 보이는 데이터는 <span class="num">${m.updated ? kst(m.updated) : "–"}</span> 기준이에요.</p>
+         <p>10분마다 바뀌는 최신 화면은 <a href="${MIRROR}" target="_blank" rel="noopener noreferrer">설치한 앱(웹사이트)</a>에서 보세요. 여기서는 AI 해석 글이 필요할 때 쓰면 좋아요.</p>${delayNote}`;
     else if (live) html = `<b>${age != null && age < 3 ? "자동 갱신이 켜져 있어요" : "데이터가 " + Math.round(age) + "시간째 그대로예요"}</b>
          <p>GitHub Actions가 장중엔 10분마다(그 외 30분마다) 시세를 받아와요. 시세판·관심종목뿐 아니라 <b>국내 전 종목과 미국 주요 종목(약 300개)의 현재가</b>도 함께 갱신돼서, 검색해서 연 종목도 따로 새로고침할 필요가 없어요. 포트폴리오는 하루 두 번 확인해요. 화면은 ${STATIC_LIVE ? 2 : 5}분마다 새 파일을 확인해요. GitHub 사정으로 몇 분씩 늦어질 수 있어요.${age != null && age >= 3 ? " 주말·휴장일이면 정상이에요." : ""}</p>`;
-    else if (hasLive) html = `<b>PC에서 마지막으로 받은 현재가예요 (${agoTxt})</b>
-         <p>휴대폰 Claude 앱은 직접 시세를 받을 수 없어서, PC의 Claude 데스크톱 앱에서 이 터미널을 열었을 때 받아 둔 현재가를 보여줘요. PC에서 이 화면이 열려 있으면 10분마다 바뀌고, 여기에도 자동으로 반영돼요.</p>
-         <p>PC 없이 휴대폰에서 바로 갱신하려면 설치 가이드의 GitHub Pages(장중 10분마다)나 Render(5초마다) 주소로 여세요.</p>${delayNote}`;
-    else html = `<b>아직 받아 둔 현재가가 없어요</b>
-         <p>휴대폰 Claude 앱은 보안상 직접 시세를 받을 수 없어요. <b>PC의 Claude 데스크톱 앱</b>에서 이 터미널을 한 번 열면 현재가를 받아 저장하고, 그 뒤로는 휴대폰에서도 그 현재가가 보여요.</p>
-         <p>PC 없이 휴대폰에서 바로 갱신하려면 설치 가이드의 GitHub Pages(장중 10분마다)나 Render(5초마다) 주소로 여세요.</p>${delayNote}`;
+    else html = `<b>이 화면은 자동 갱신이 꺼져 있어요</b>
+         <p>파일로 직접 연 화면이라 새 데이터를 받지 않아요. 10분마다 바뀌는 화면은 <a href="${MIRROR}" target="_blank" rel="noopener noreferrer">설치한 앱(웹사이트)</a>에서 보세요.</p>${delayNote}`;
     $("#updInfo").innerHTML = html;
   }
   function flashUpd(msg){
@@ -2203,8 +2204,9 @@ ${JSON.stringify(need)}`;
   }
   async function startLive(){
     // 저장된 현재가 (휴대폰 등 어디서나 읽기)
-    try { LIVE.db = await window.claude?.use?.("db"); } catch { LIVE.db = null; }
-    if (LIVE.db && !API.on){
+    // (예전 방식) PC 앱 브라우저가 받아 저장한 현재가는 더 이상 쓰지 않아요 → GitHub이 만든 quotes.json만 사용
+    LIVE.db = null;
+    if (false){
       try {
         LIVE.db.doc("live/quotes").onSnapshot(snap => {
           const d = snap.exists ? snap.data() : null;
@@ -2212,7 +2214,6 @@ ${JSON.stringify(need)}`;
         }, () => {});
       } catch {}
     }
-    if (!API.on){ const f = await loadLiveFile(); if (f && f.t > LIVE.t) applySaved(f, "saved"); }
     if (API.on){ LIVE.mode = "server"; }
     else {
       try { LIVE.mcp = await window.claude?.use?.("mcp"); } catch { LIVE.mcp = null; }
