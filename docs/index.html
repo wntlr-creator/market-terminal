@@ -510,7 +510,9 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
 }
 
 /* ===== 화면 전환 (마켓 / 대가 포트폴리오) ===== */
-.views{display:flex;gap:2px;margin-inline:-16px;padding:0 16px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.views{display:flex;gap:2px;margin-inline:-16px;padding:0 16px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;position:sticky;top:var(--top-h,0px);z-index:19;background:var(--bg)}
+/* 휴대폰: 위쪽 시세 줄은 같이 올라가고, 화면 메뉴(마켓·포트폴리오·추천·AI)만 맨 위에 고정 */
+@media (max-width:640px){.top{position:static}.views{top:env(safe-area-inset-top,0px)}}
 .views button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px 9px;font-size:14.5px;font-weight:600;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:7px}
 .views button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
 .views .dot{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-family:var(--font-num);display:inline-flex;align-items:center;justify-content:center}
@@ -1739,11 +1741,18 @@ ${JSON.stringify(need)}`;
     const m = DATA.meta || {};
     renderUpd();
     const n = $("#notice");
+    const ageH = (Date.now() - (Date.parse(m.updated || 0) || 0)) / 36e5;
     if (m.sample){ n.hidden = false; n.innerHTML = `<b>예시 데이터 화면</b> · 실제 시세가 아니라 화면 구성을 보여주는 샘플이에요. <span class="num">fetch_data.py</span>를 실행하면 진짜 시세로 바뀝니다.`; }
+    // Claude 앱 안에서 최신 데이터를 못 받는 경우: 오래된 데이터라는 걸 분명히 알리고 앱 주소로 안내
+    else if (window.claude && !mirrorOK && !API.on && ageH > 6){ n.hidden = false; n.innerHTML = `<b>${Math.round(ageH / 24) >= 1 ? Math.round(ageH / 24) + "일" : Math.round(ageH) + "시간"} 전 데이터예요.</b> Claude 앱 안에서는 자동 갱신 데이터를 받지 못해서 점수·의견도 그때 기준이에요. 최신 화면은 <a href="${MIRROR}" target="_blank" rel="noopener noreferrer">설치한 앱(웹사이트)</a>에서 보세요.`; }
     else n.hidden = true;
     renderTape(); renderBoard(); renderWatch(); renderChart(); renderHeat(); renderEarn(); renderNews(); renderMovers();
   }
 
+  // 위쪽 시세 줄 높이만큼 화면 메뉴를 아래에 고정
+  (() => { const top = document.querySelector(".top"); if (!top) return;
+    const set = () => document.documentElement.style.setProperty("--top-h", getComputedStyle(top).position === "sticky" ? top.offsetHeight + "px" : "0px");
+    try { new ResizeObserver(set).observe(top); } catch {} addEventListener("resize", set); set(); })();
   // Claude 앱 안에서 열면: GitHub이 10분마다 갱신하는 사이트의 데이터 파일을 먼저 읽기 (브라우저 창을 열지 않아도 최신)
   const MIRROR = "https://wntlr-creator.github.io/market-terminal/";
   let mirrorOK = !!window.claude && !location.href.startsWith(MIRROR);
