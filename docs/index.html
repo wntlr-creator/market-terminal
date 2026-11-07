@@ -400,6 +400,29 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
 .etf-tbl tr[data-go]:hover td{background:var(--panel-2)}
 .etf-tbl .up{color:var(--up)} .etf-tbl .down{color:var(--down)}
 @media (max-width:640px){.etf-tbl small{display:none}.etf-tbl th,.etf-tbl td{padding:6px 5px}}
+.pk-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between}
+.pk-desc{font-size:13px;color:var(--muted);margin:10px 0 12px;line-height:1.55}
+.pk-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.pk-list.compact{grid-template-columns:1fr;gap:8px}
+@media (max-width:640px){.pk-list{grid-template-columns:1fr}}
+.pk-card{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--panel-2);display:flex;flex-direction:column;gap:9px}
+.pk-list.compact .pk-card{padding:10px 12px;gap:6px}
+.pk-top{display:flex;gap:10px;align-items:center}
+.pk-rank{width:24px;height:24px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none}
+.pk-nm{flex:1;min-width:0;font-size:13px} .pk-nm b{font-size:15px}
+.pk-sc{text-align:right;line-height:1} .pk-sc span{font-size:26px;font-weight:800} .pk-sc small{font-size:11px;color:var(--muted)}
+.pk-sc.up span{color:var(--up)} .pk-sc.down span{color:var(--down)}
+.pk-bars{display:grid;gap:4px}
+.pk-b{display:grid;grid-template-columns:30px 1fr 26px;gap:7px;align-items:center;font-size:11.5px;color:var(--muted)}
+.pk-b i{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:block} .pk-b i b{display:block;height:100%;background:var(--accent)}
+.pk-b em{font-style:normal;text-align:right;color:var(--fg)}
+.pk-why{margin:0;padding-left:18px;display:grid;gap:4px;font-size:12.8px;line-height:1.5}
+.pk-risk{display:flex;flex-wrap:wrap;gap:5px} .pk-risk span{font-size:11.5px;background:var(--down-bg);color:var(--down);border-radius:6px;padding:2px 7px}
+.pk-news{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.pk-news li{display:flex;gap:6px;align-items:baseline;font-size:12.5px}
+.pk-news a{color:var(--fg);text-decoration:none;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pk-foot{margin-top:12px;display:grid;gap:6px;justify-items:start}
 .tone{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap;flex:none}
 .tone.good{background:var(--up-bg);color:var(--up)} .tone.bad{background:var(--down-bg);color:var(--down)} .tone.neutral{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
 .tone.rule{opacity:.85}
@@ -618,6 +641,7 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
   <nav class="views" role="tablist" aria-label="화면">
     <button type="button" role="tab" data-view="market" aria-selected="true">마켓</button>
     <button type="button" role="tab" data-view="portfolio" aria-selected="false">대가 포트폴리오 <span class="dot" id="pfDot" hidden></span></button>
+    <button type="button" role="tab" data-view="picks" aria-selected="false">종목 추천</button>
     <button type="button" role="tab" data-view="ai" aria-selected="false">AI 애널리스트</button>
   </nav>
 
@@ -626,6 +650,24 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
   <div id="view-portfolio" hidden>
     <div class="pf-strip" id="pfStrip" role="tablist" aria-label="투자자"></div>
     <section class="panel" id="pfPanel" aria-live="polite" style="margin-top:14px"></section>
+  </div>
+
+  <div id="view-picks" hidden>
+    <section class="panel" aria-labelledby="h-picks">
+      <div class="ph"><h2 id="h-picks">종목 추천</h2><span class="muted" id="pkUpd" style="font-size:12px"></span></div>
+      <div class="pb">
+        <div class="pk-bar">
+          <div class="seg" id="pkPreset" role="group" aria-label="고르는 기준"></div>
+          <div class="seg" id="pkMkt" role="group" aria-label="시장"><button type="button" data-pm="KR" aria-pressed="true">국내</button><button type="button" data-pm="US" aria-pressed="false">미국</button><button type="button" data-pm="ETF" aria-pressed="false">ETF</button></div>
+        </div>
+        <p class="pk-desc" id="pkDesc"></p>
+        <div class="pk-list" id="pkList"><p class="muted">불러오는 중…</p></div>
+        <div class="pk-foot">
+          <button type="button" class="icon-btn" id="pkAsk">AI에게 이 후보들 비교 부탁하기</button>
+          <p class="hint" id="pkMethod"></p>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div id="view-ai" hidden>
@@ -2358,6 +2400,8 @@ ${JSON.stringify(need)}`;
     $("#view-market").hidden = view !== "market";
     $("#view-portfolio").hidden = view !== "portfolio";
     $("#view-ai").hidden = view !== "ai";
+    $("#view-picks").hidden = view !== "picks";
+    if (view === "picks") renderPicks();
     if (view === "portfolio") renderPf();
     if (view === "ai") openChat();
   }
@@ -2468,6 +2512,54 @@ ${JSON.stringify(need)}`;
   }
   $("#ezSeg").addEventListener("click", e => { const b = e.target.closest("[data-ez]"); if (!b) return; EZ_TAB = b.dataset.ez; try { localStorage.setItem("mt-ez", EZ_TAB); } catch {} renderEz(); });
   $("#ezRow").addEventListener("click", e => { const b = e.target.closest("[data-ez-go]"); if (b){ S.inv = b.dataset.ezGo; setView("portfolio", b.dataset.ezGo); } });
+
+  /* ================= 종목 추천 (기술 + 가치 + 뉴스) ================= */
+  const PK = { data: null, p: null, preset: "best", mkt: "KR" };
+  try { PK.preset = localStorage.getItem("mt-pk-preset") || "best"; PK.mkt = localStorage.getItem("mt-pk-mkt") || "KR"; } catch {}
+  const PK_DESC = {
+    best: "기술적 분석 점수가 57점 이상인 종목 중, 기술·가치(PER·ROE)·뉴스를 합친 점수가 높은 순서예요.",
+    value: "같은 업종보다 PER이 낮거나 ROE가 좋은데(가치 62점↑), 차트도 오르는 쪽(기술 55점↑)인 종목이에요.",
+    dip: "큰 흐름(60일선이 120일선 위)은 오르는 중인데 최근 20일 동안 쉬어서 RSI가 33~50으로 내려온 종목이에요. 다시 오를 때 사려는 사람이 보는 목록이에요.",
+    momentum: "기술 점수 65점 이상이면서 최근 60일 동안 가장 많이 오른 순서예요. 과열(RSI 75 이상)은 뺐어요.",
+  };
+  function loadPicks(){
+    return PK.p || (PK.p = fetchD("picks.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => (PK.data = j)).catch(() => null));
+  }
+  function pkPrice(x){ const kr = x.mkt === "KR" || x.mkt === "ETF_KR"; const q = quoteOf(x.sym) || QT.qs?.[x.sym]; const p = q?.price ?? x.price, c = q?.chgPct ?? x.chgPct;
+    return `<span class="num">${kr ? Math.round(p).toLocaleString() + "원" : "$" + (+p).toFixed(2)}</span>${c != null ? ` <span class="num ${cls(c)}">${fmtPct(c)}</span>` : ""}`; }
+  function pkCard(x, i, compact){
+    const tone = x.score >= 65 ? "up" : x.score <= 45 ? "down" : "";
+    const bar = (k, v) => v == null ? "" : `<div class="pk-b"><span>${k}</span><i><b style="width:${v}%"></b></i><em class="num">${v}</em></div>`;
+    return `<article class="pk-card">
+      <div class="pk-top"><span class="pk-rank num">${i + 1}</span>
+        <div class="pk-nm"><b>${esc(x.name)}</b> <small class="muted num">${esc(x.sym)}</small><div>${pkPrice(x)}</div></div>
+        <div class="pk-sc ${tone}"><span class="num">${x.score}</span><small>/100</small></div></div>
+      <div class="pk-bars">${bar("기술", x.T)}${bar("가치", x.V)}${bar("뉴스", x.N)}</div>
+      <ol class="pk-why">${x.why.map(t => `<li>${esc(t)}</li>`).join("")}</ol>
+      ${x.risk.length ? `<div class="pk-risk">${x.risk.map(t => `<span>⚠ ${esc(t)}</span>`).join("")}</div>` : ""}
+      ${!compact && x.news.length ? `<ul class="pk-news">${x.news.slice(0, 3).map(n => `<li><span class="tone ${n.tone}">${TONE_KO[n.tone]}</span><a href="${esc(n.l)}" target="_blank" rel="noopener noreferrer">${esc(n.t)}</a><small class="muted">${esc(n.d.slice(5).replace("-", "."))}</small></li>`).join("")}</ul>` : ""}
+      ${!compact ? `<div class="pk-acts"><button type="button" class="icon-btn" data-go="${esc(x.sym)}" data-go-name="${esc(x.name)}">차트 보기</button><button type="button" class="icon-btn" data-pk-ask="${esc(x.name)}">AI에게 자세히</button>${x.stopTxt ? `<small class="muted">손절 참고 ${esc(x.stopTxt)}</small>` : ""}</div>` : ""}
+    </article>`;
+  }
+  async function renderPicks(){
+    const d = PK.data || await loadPicks();
+    if (!d){ $("#pkList").innerHTML = `<p class="muted">추천 자료(picks.json)가 아직 없어요. GitHub이 하루 두 번(오전 8시 30분, 평일 저녁 8시 30분) 만들어요.</p>`; return; }
+    $("#pkPreset").innerHTML = Object.entries(d.presets).map(([k, v]) => `<button type="button" data-pp="${k}" aria-pressed="${k === PK.preset}">${esc(v.name)}</button>`).join("");
+    $("#pkMkt").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.pm === PK.mkt));
+    $("#pkUpd").textContent = `${kst(d.updated)} 기준 · ${d.stats.analyzed.toLocaleString()}개 분석`;
+    $("#pkDesc").textContent = PK_DESC[PK.preset] || "";
+    const list = d.presets[PK.preset]?.[PK.mkt] || [];
+    $("#pkList").innerHTML = list.length ? list.map((x, i) => pkCard(x, i)).join("") : `<p class="muted">지금은 이 기준에 맞는 종목이 없어요.${PK.mkt === "ETF" && PK.preset === "value" ? " ETF는 PER이 없어서 '저평가' 기준은 쓰지 않아요." : ""}</p>`;
+    $("#pkMethod").textContent = `점수 = ${d.method}. 기술은 앱의 차트 분석과 같은 계산, 가치는 국내는 같은 업종 PER 중앙값·ROE, 미국은 대형주 PER 중앙값·예상 PER과 비교해요. 뉴스는 최근 7일 기사 제목으로 호재·악재를 나눠요. 정해진 규칙으로 고른 참고 목록이고, 사라는 권유가 아니에요.`;
+  }
+  $("#pkPreset").addEventListener("click", e => { const b = e.target.closest("[data-pp]"); if (!b) return; PK.preset = b.dataset.pp; try { localStorage.setItem("mt-pk-preset", PK.preset); } catch {} renderPicks(); });
+  $("#pkMkt").addEventListener("click", e => { const b = e.target.closest("[data-pm]"); if (!b) return; PK.mkt = b.dataset.pm; try { localStorage.setItem("mt-pk-mkt", PK.mkt); } catch {} renderPicks(); });
+  $("#pkList").addEventListener("click", e => {
+    const g = e.target.closest("[data-go]"); if (g){ setView("market"); openFromList(g.dataset.go, g.dataset.goName); return; }
+    const a = e.target.closest("[data-pk-ask]"); if (a){ setView("ai"); $("#chatText").value = `${a.dataset.pkAsk} 지금 사도 될까? 추천 근거와 위험 같이`; $("#chatForm").requestSubmit(); }
+  });
+  $("#pkAsk").addEventListener("click", () => { setView("ai"); $("#chatText").value = `${{ KR: "국내", US: "미국", ETF: "ETF" }[PK.mkt]} ${PK.data?.presets?.[PK.preset]?.name || ""} 추천 후보 비교해서 살 만한 종목 골라줘`; $("#chatForm").requestSubmit(); });
+  const PICK_RE = /추천|뭐\s*(살|사)|무엇을\s*사|살\s*만한|사야\s*(될|할|하)|매수할\s*만한|유망|괜찮은\s*종목|고를|골라/;
 
   /* ================= 기술적 분석 패널 ================= */
   const TA_STATE = { sym: null, an: null, ai: null, aiErr: null, busy: false, ctl: null, t0: 0, timer: null };
@@ -3215,13 +3307,13 @@ ${JSON.stringify(data)}`;
       <ol>${m.steps.map(st => `<li>${esc(st.t)}<span>${st.ms != null ? st.ms + "ms" : "…"}</span></li>`).join("")}</ol></details>` : "";
     const wait = m.waiting ? `<div class="answer muted"><span class="spin" aria-hidden="true" style="display:inline-block;vertical-align:-2px"></span> 답변 준비 중 · <span class="num" id="chatWait">0초</span></div>` : "";
     const chips = m.chips?.length && idx === CHAT.msgs.length - 1 && !CHAT.busy ? `<div class="chips">${m.chips.map(q => `<button type="button" class="chip-q" data-chat-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : "";
-    return `<div class="msg-a"><span class="who">&gt;_ AI 애널리스트</span>${steps}${mktCardHTML(m.mcard)}${cardHTML(m.card)}${m.etf ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">ETF 구성종목 분석</span><b>${esc(m.etf.name || "")}</b></div>${etfHTML(m.etf, false)}</div>` : ""}${vizCardHTML(m.viz)}${m.text ? `<div class="answer">${mdLite(m.text)}</div>` : ""}${newsCardHTML(m.news)}${m.note ? `<div class="answer"><p class="muted">${esc(m.note)}</p></div>` : ""}${wait}${chips}</div>`;
+    return `<div class="msg-a"><span class="who">&gt;_ AI 애널리스트</span>${steps}${m.picks ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">추천 후보</span><b>${esc(m.picks.title)}</b><small>상위 ${m.picks.list.length}개</small></div><div class="pk-list compact">${m.picks.list.map((x, i) => pkCard(x, i, true)).join("")}</div></div>` : ""}${mktCardHTML(m.mcard)}${cardHTML(m.card)}${m.etf ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">ETF 구성종목 분석</span><b>${esc(m.etf.name || "")}</b></div>${etfHTML(m.etf, false)}</div>` : ""}${vizCardHTML(m.viz)}${m.text ? `<div class="answer">${mdLite(m.text)}</div>` : ""}${newsCardHTML(m.news)}${m.note ? `<div class="answer"><p class="muted">${esc(m.note)}</p></div>` : ""}${wait}${chips}</div>`;
   }
   function renderChat(){
     const log = $("#chatLog");
     if (!CHAT.msgs.length){
       const w = (DATA?.watchlist || []).slice(0, 4).map(x => x.name);
-      const ex = [`${w[0] || "삼성전자"} 전망·매수 판단`, `${w[3] || "엔비디아"} 최근 급등 이유`, "오늘 시장 요약", `${w[1] || "SK하이닉스"} 기업분석 보고서`, "하락장 올까? 시장 국면 점검"];
+      const ex = [`${w[0] || "삼성전자"} 전망·매수 판단`, `${w[3] || "엔비디아"} 최근 급등 이유`, "오늘 시장 요약", `${w[1] || "SK하이닉스"} 기업분석 보고서`, "하락장 올까? 시장 국면 점검", "지금 살 만한 국내 종목 추천"];
       log.innerHTML = `<div class="chat-hello"><h3>무엇을 분석해 드릴까요?</h3>
         <p>종목명을 넣으면 차트·기술적 지표·뉴스를 모아 종합 의견(0~100점), 진입·목표·손절 가격대를 정리하고 AI가 해석해 드려요. 국내 전 종목을 찾을 수 있어요.</p>
         <div class="chips">${ex.map(q => `<button type="button" class="chip-q" data-chat-q="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>`;
@@ -3297,6 +3389,7 @@ ${JSON.stringify(data)}`;
 - 줄바꿈과 '- ' 글머리표, '### 소제목', **굵게** 정도만 써.`;
     const len = mode === "report" ? `기업분석 보고서 형식으로 써: ### 한줄 요약 / ### 주가·추세 / ### 기술적 지표 / ### 최근 뉴스 흐름 / ### 재무·밸류에이션(데이터 없으면 그렇다고) / ### 시나리오(상승·하락 조건) / ### 리스크. 700~1200자.`
       : mode === "reason" ? "최근 움직임(20일·60일 등락, 최근 봉, 거래량)과 뉴스 제목으로 이유를 3~6문장으로 설명해."
+      : mode === "picks" ? "종목 추천 질문이야. '후보'는 규칙으로 미리 고른 목록이야. 이 안에서만 골라. ### 결론(살 만한 후보 2~3개, 각각 한 줄 이유) / ### 후보별 근거(기술·가치·뉴스를 숫자로 비교, 서로 왜 다른지) / ### 지금 시장 상황(시장국면)에서 주의할 점 / ### 고르는 방법(어떤 성향이면 어떤 후보, 분할 매수·손절 참고가) / ### 빼야 할 후보와 이유(위험이 큰 것) 순서로 700~1100자. 숫자는 데이터 그대로 쓰고, 매수 권유가 아니라 판단 재료라는 점을 마지막에 한 줄로."
       : mode === "market" ? "시장 국면 질문이야. ### 지금 판단(위험도와 한줄 요약) / ### 근거(추세·고점 대비·VIX·금리·환율·국내 등락 비율) / ### 하락장 신호가 강해지는 조건 / ### 반대로 안정되는 조건 / ### 대응 참고(분할 매수·현금 비중 같은 일반 원칙, 투자 권유 아님) 형식으로 500~900자."
       : mode === "fin" ? "재무·밸류에이션 질문이야. 데이터에 있는 것(시가총액, 52주 범위 등)만으로 답하고, 없는 재무 지표는 없다고 밝힌 뒤 확인할 곳(전자공시 DART, 증권사 앱)을 알려 줘. 4~7문장."
       : "질문에 맞춰 전망과 매수·매도 판단 근거를 4~8문장으로 설명해. 마지막에 진입·손절·목표가를 어떻게 쓰면 되는지 한두 문장.";
@@ -3328,9 +3421,11 @@ ${JSON.stringify(ctx)}
     const step = async (t, fn) => { const st = { t, ms: null }; m.steps.push(st); renderChat(); const t0 = performance.now(); try { return await fn(); } finally { st.ms = Math.round(performance.now() - t0); renderChat(); } };
     const easy = $("#chatEasy").checked, mode = modeOf(q);
     try {
-      let e = await step("종목 찾기", () => resolveStock(q));
-      const wantMkt = MKT_WORDS.test(q), marketQ = !e && wantMkt;
-      if (!e && !marketQ && CHAT.sym){ IDX = IDX || buildIndex(); e = IDX.find(x => x.sym === CHAT.sym) || null; }   // "그럼 목표가는?" 같은 이어 묻기
+      const pickQ = PICK_RE.test(q);
+      let e = pickQ && !/[A-Z]{2,}|\d{6}/.test(q) && !/(삼성|SK|LG|현대|카카오|네이버)/.test(q) && /종목|주식|후보|ETF|국내|미국|뭐|무엇/.test(q) ? null : await step("종목 찾기", () => resolveStock(q));
+      const picksQ = pickQ && !e;
+      const wantMkt = MKT_WORDS.test(q), marketQ = !e && wantMkt && !picksQ;
+      if (!e && !marketQ && !picksQ && CHAT.sym){ IDX = IDX || buildIndex(); e = IDX.find(x => x.sym === CHAT.sym) || null; }   // "그럼 목표가는?" 같은 이어 묻기
       let ctx, an = null;
       if (e){
         const ok = await step(`${e.name} 시세·차트 불러오기`, async () => { const r = await ensureCandles(e, false); if (r && LIVE.mode === "browser" && LIVE.auto && (await fetchBars(e.sym)) !== false) await blankPane(); return r; });
@@ -3366,6 +3461,20 @@ ${JSON.stringify(ctx)}
         const reg = marketRegime();
         if (reg){ ctx.시장국면 = mktCtx(reg); if (wantMkt) m.mcard = reg; }
         m.chips = chipsFor(e, an);
+      } else if (picksQ){
+        const d = await step("추천 후보 불러오기 (기술·가치·뉴스 점수)", () => loadPicks());
+        if (!d){ m.note = "추천 자료가 아직 없어요. GitHub이 하루 두 번 만들어요."; throw { code: "quiet" }; }
+        const mk = /미국|해외|나스닥|S&P|US/i.test(q) ? "US" : /ETF/i.test(q) ? "ETF" : /국내|한국|코스피|코스닥/.test(q) ? "KR" : null;
+        const pk = /저평가|싼|가치/.test(q) ? "value" : /눌림|조정|쉬어/.test(q) ? "dip" : /모멘텀|급등|강한|오르는/.test(q) ? "momentum" : "best";
+        const pre = d.presets[pk];
+        const take = g => (pre[g] || []).slice(0, mk ? 8 : 4);
+        const pickList = (mk ? [mk] : ["KR", "US", "ETF"]).flatMap(g => take(g).map(x => ({ ...x, 그룹: g })));
+        const reg = marketRegime();
+        m.picks = { title: `${pre.name}${mk ? " · " + { KR: "국내", US: "미국", ETF: "ETF" }[mk] : ""}`, list: pickList.slice(0, 6) };
+        ctx = { 추천기준: pre.name, 점수방식: d.method, 기준시각: d.updated, 시장국면: reg ? mktCtx(reg) : "없음",
+          후보: pickList.map(x => ({ 종목: `${x.name}(${x.sym})`, 구분: x.그룹, 종합점수: x.score, 기술: x.T, 가치: x.V, 뉴스: x.N, 신호: x.signal, PER: x.per, 비교PER: x.perBase, ROE: x.roe, RSI: x.rsi,
+            "20일등락%": x.chg20, "60일등락%": x.chg60, "1년범위위치%": x.pos52, 근거: x.why, 위험: x.risk, 뉴스제목: x.news.map(n => `${n.d} ${TONE_KO[n.tone]}: ${n.t}`), 손절참고: x.stopTxt })) };
+        m.chips = ["저평가 + 상승 추세 종목 추천", "눌림목 종목 추천", "미국 주식 추천", "ETF 추천"];
       } else if (marketQ){
         await step("시장 지표 확인 (지수 추세·VIX·금리·환율)", () => loadMarketHist(true));
         await step("국내 전 종목 등락 집계", () => loadKR());
@@ -3386,7 +3495,7 @@ ${JSON.stringify(ctx)}
       }
       m.waiting = true; renderChat(); scrollChat();
       clearInterval(CHAT.timer); CHAT.timer = setInterval(() => { const el = $("#chatWait"); if (el) el.textContent = Math.round((Date.now() - CHAT.t0) / 1000) + "초"; }, 1000);
-      const r = await callAI(chatPrompt(q, ctx, marketQ ? "market" : mode, easy), marketQ ? "report" : mode, ctl.signal);
+      const r = await callAI(chatPrompt(q, ctx, picksQ ? "picks" : marketQ ? "market" : mode, easy), picksQ || marketQ ? "report" : mode, ctl.signal);
       if (!r || typeof r.answer !== "string") throw { code: "invalid_json" };
       m.text = r.answer;
       if (Array.isArray(r.followups) && r.followups.length) m.chips = r.followups.slice(0, 4).map(String);

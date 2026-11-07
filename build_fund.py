@@ -91,11 +91,29 @@ def us_fund():
     return out
 
 
+def debug_kr():
+    """국내 PER 출처 진단: 화면 원본·API 응답 일부를 data/에 저장"""
+    tries = [("sise", "https://finance.naver.com/sise/sise_market_sum.naver?sosok=0&page=1", "euc-kr"),
+             ("m_value", "https://m.stock.naver.com/api/stocks/marketValue/KOSPI?page=1&pageSize=5", "utf-8"),
+             ("m_integ", "https://m.stock.naver.com/api/stock/005930/integration", "utf-8"),
+             ("m_basic", "https://m.stock.naver.com/api/stock/005930/basic", "utf-8"),
+             ("m_finance", "https://m.stock.naver.com/api/stock/005930/finance/annual", "utf-8")]
+    for name, url, enc in tries:
+        try:
+            t = get(url, enc)
+            i = max(t.find("PER"), 0)
+            (ROOT / "data" / f"fund_debug_{name}.txt").write_text(f"len={len(t)} idx={i}\n" + t[:6000] + "\n....\n" + t[max(0, i - 1500):i + 3000], encoding="utf-8")
+            log("진단", name, len(t), i)
+        except Exception as e:  # noqa: BLE001
+            log("진단 실패", name, e)
+
+
 def main():
     LOG.parent.mkdir(parents=True, exist_ok=True)
     log("시작", datetime.now(KST).isoformat(timespec="seconds"))
     prev = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     kr = {}
+    debug_kr()
     try:
         kr = kr_fund()
     except Exception as e:  # noqa: BLE001
