@@ -2802,7 +2802,7 @@ ${JSON.stringify(data)}`;
     if (ETF.loading) return ETF.loading;
     ETF.loading = fetchD("etf/index.json").then(r => r.ok ? r.json() : null).then(j => {
       if (!j) return; ETF.idx = j;
-      j.items.forEach(([sym, name, kind, price, chgPct, aum, hasH]) => ETF.map[sym] = { sym, name, kind, price, chgPct, aum, hasH });
+      j.items.forEach(([sym, name, kind, price, chgPct, aum, hasH]) => { if (kind === "C" && ETF.map[sym]) return; ETF.map[sym] = { sym, name, kind, price, chgPct, aum, hasH }; });   // 같은 티커가 'ETF'와 '구성종목용'으로 두 번 있으면 ETF 쪽 유지
       if (typeof QT !== "undefined" && QT.qs) for (const k of Object.values(ETF.map)){ const q = QT.qs[k.sym]; if (q){ k.price = q.price; k.chgPct = q.chgPct; } }
       IDX = null;
     }).catch(() => {});
@@ -2974,7 +2974,8 @@ ${JSON.stringify(data)}`;
     (UNIVERSE || []).forEach(([sym, name, mk]) => add(sym, name, "", "", mk));
     Object.values(KR.map).forEach(k => add(k.sym, k.name, "", "", k.mk));
     Object.values(US.map).forEach(u => add(u.sym, u.name, "", "", "US"));
-    Object.values(ETF.map).forEach(x => { if (x.kind !== "C") add(x.sym, x.name, "ETF", "", "ETF"); });
+    const BRAND_KO = { KODEX: "코덱스", TIGER: "타이거", ACE: "에이스", PLUS: "플러스", RISE: "라이즈", SOL: "솔", KBSTAR: "케이비스타", HANARO: "하나로", KIWOOM: "키움", ARIRANG: "아리랑", KOSEF: "코세프", TIMEFOLIO: "타임폴리오" };
+    Object.values(ETF.map).forEach(x => { if (x.kind === "C") return; const b = (x.name || "").split(" ")[0]; add(x.sym, x.name, "ETF " + (BRAND_KO[b] ? x.name.replace(b, BRAND_KO[b]) : ""), "", "ETF"); });
     if (PF?.investors) for (const [id, v] of Object.entries(PF.investors)) (v.holdings || []).forEach(h => h.sym && !/\s/.test(h.sym) && add(h.sym, "", h.name, v.name + " 보유"));
     for (const e of m.values()){ e.n = norm(e.name); e.a = norm(e.alt); e.s = norm(e.sym); e.c = chosung(e.name.replace(/\s/g, "")); e.j = jamo(e.n); }
     return [...m.values()];

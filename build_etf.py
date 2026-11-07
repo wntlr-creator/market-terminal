@@ -320,12 +320,13 @@ def main():
 
     # 일봉: ETF 전부 + 국내·미국 묶음에 없는 구성종목
     kr_etf_syms = [c + ".KS" for c, _, _ in kr_list]
+    kr_etf_set = set(kr_etf_syms)   # ETF 안에 담긴 다른 ETF는 이미 ETF로 받으므로 '구성종목용 일봉'으로 또 받지 않기
     extra = set()
     for k, v in holdings.items():
         if k.startswith("_"):
             continue
         for sym, _, _ in v.get("h", []):
-            if sym and sym not in kr_name and sym not in us_have and re.fullmatch(r"[A-Z0-9.\-=^]{1,15}", sym):
+            if sym and sym not in kr_name and sym not in us_have and sym not in kr_etf_set and sym not in US_ETFS and re.fullmatch(r"[A-Z0-9.\-=^]{1,15}", sym):
                 extra.add(sym)
     kr_c = candles(kr_etf_syms, lambda s: True) if kr_etf_syms else {}
     us_c = candles(us_list + sorted(extra - set(us_list)), lambda s: s.endswith((".KS", ".KQ")))
