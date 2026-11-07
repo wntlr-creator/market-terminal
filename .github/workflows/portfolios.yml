@@ -28,6 +28,12 @@ jobs:
       - name: 미국 주요 종목 일봉 (검색 차트용)
         run: python build_us.py
         continue-on-error: true
+      - name: 기본적 분석 지표 (PER·ROE 등)
+        run: python build_fund.py
+        continue-on-error: true
+      - name: 종목 추천 후보 (기술 + 가치 + 뉴스)
+        run: node build_picks.mjs
+        continue-on-error: true
       - name: 포트폴리오 데이터 받기
         env:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
@@ -38,6 +44,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/portfolios.json docs/kr data/cusip_map.json
           if [ -d docs/us ]; then git add docs/us; fi
+          for f in docs/fund.json docs/picks.json data/fund_log.txt; do if [ -f "$f" ]; then git add "$f"; fi; done
           if [ -f data/ark_last.json ]; then git add data/ark_last.json; fi
           git diff --cached --quiet && exit 0
           git commit -m "kr+portfolios: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
