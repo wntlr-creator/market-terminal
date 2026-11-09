@@ -1360,16 +1360,19 @@ const TA = (() => {
     const link = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (syncing || !r) return; syncing = true; b.timeScale().setVisibleLogicalRange(r); syncing = false; });
     link(chart, vchart); link(vchart, chart);
     const idxOf = t => lastBars.findIndex(x => x.time === t);
-    chart.subscribeCrosshairMove(p => {
+    // 한쪽 차트에서 움직이면 다른 쪽엔 같은 날짜만 맞춰 표시. 코드로 옮긴 십자선 이벤트(사람이 움직인 게 아님)는 무시해서
+    // 서로 값을 덮어쓰며 '달라붙는' 현상이 생기지 않게 함
+    let xSync = false;
+    const follow = (src, dst, dstSeries, val) => src.subscribeCrosshairMove(p => {
+      if (xSync) return;
       const i = p?.time ? idxOf(p.time) : lastBars.length - 1; if (i < 0) return;
       $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i);
-      if (p?.time && vchart.setCrosshairPosition) vchart.setCrosshairPosition(lastRaw[i][5] || 0, p.time, vol); else if (!p?.time) vchart.clearCrosshairPosition?.();
+      xSync = true;
+      try { if (p?.time && dst.setCrosshairPosition) dst.setCrosshairPosition(val(i), p.time, dstSeries); else if (!p?.time) dst.clearCrosshairPosition?.(); }
+      finally { xSync = false; }
     });
-    vchart.subscribeCrosshairMove(p => {
-      const i = p?.time ? idxOf(p.time) : lastBars.length - 1; if (i < 0) return;
-      $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i);
-      if (p?.time && chart.setCrosshairPosition) chart.setCrosshairPosition(lastBars[i].close, p.time, main); else if (!p?.time) chart.clearCrosshairPosition?.();
-    });
+    follow(chart, vchart, vol, i => lastRaw[i][5] || 0);
+    follow(vchart, chart, main, i => lastBars[i].close);
   }
   function maData(k){ const v = TA.sma(lastBars.map(x => x.close), k); return lastBars.map((b, i) => v[i] == null ? null : { time: b.time, value: +v[i].toFixed(4) }).filter(Boolean); }
   function setMainData(){
