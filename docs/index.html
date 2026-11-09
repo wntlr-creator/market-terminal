@@ -1306,7 +1306,9 @@ const TA = (() => {
       grid: { vertLines: { color: css("--line-2") }, horzLines: { color: css("--line-2") } },
       rightPriceScale: { borderColor: css("--line"), minimumWidth: 78 },
       timeScale: { borderColor: css("--line") },
-      crosshair: { vertLine: { color: css("--dim"), labelBackgroundColor: css("--panel-2") }, horzLine: { color: css("--dim"), labelBackgroundColor: css("--panel-2") } }
+      // 십자선: 종가에 달라붙지 않고(Normal) 손가락·마우스를 그대로 따라감, 얇은 실선
+      crosshair: { mode: 0, vertLine: { color: alpha(css("--muted"), 0.55), width: 1, style: 0, labelBackgroundColor: css("--panel-2") }, horzLine: { color: alpha(css("--muted"), 0.55), width: 1, style: 0, labelBackgroundColor: css("--panel-2") } },
+      kineticScroll: { touch: true, mouse: false }
     };
   }
   function mainColors(){
