@@ -1323,7 +1323,14 @@ const TA = (() => {
     main = S.ctype === "line" ? chart.addLineSeries({ ...base, ...mainColors(), crosshairMarkerRadius: 3 })
          : S.ctype === "bar" ? chart.addBarSeries({ ...base, ...mainColors() })
          : chart.addCandlestickSeries({ ...base, ...mainColors() });
-    main.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.06 } });
+    fitTopMargin();
+  }
+  // 위쪽 범례(시·고·저·종·이평)가 캔들·패턴선을 가리지 않게, 범례 높이만큼 위 여백을 둠
+  function fitTopMargin(){
+    if (!main) return;
+    const h = $("#chart")?.clientHeight || 300, lg = $("#legend")?.offsetHeight || 20;
+    const top = Math.min(0.32, Math.max(0.08, (lg + 14) / h));
+    try { main.priceScale().applyOptions({ scaleMargins: { top, bottom: 0.06 } }); } catch {}
   }
   function seriesColors(){
     main?.applyOptions(mainColors());
@@ -1357,7 +1364,15 @@ const TA = (() => {
     volMa = vchart.addLineSeries({ ...line, lineWidth: 1 });
     seriesColors();
     // 두 차트 시간축 동기화
-    const link = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (syncing || !r) return; syncing = true; b.timeScale().setVisibleLogicalRange(r); syncing = false; });
+    // 끌어서 옮길 때 오늘 봉 오른쪽 빈 공간으로 너무 멀리 밀려나지 않게(최대 6칸) 붙잡아 둠
+    const MAX_FUTURE = 6;
+    const link = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => {
+      if (syncing || !r) return;
+      syncing = true;
+      const last = lastBars.length - 1;
+      if (last > 0 && r.to > last + MAX_FUTURE){ const d = r.to - (last + MAX_FUTURE); r = { from: r.from - d, to: r.to - d }; a.timeScale().setVisibleLogicalRange(r); }
+      b.timeScale().setVisibleLogicalRange(r); syncing = false;
+    });
     link(chart, vchart); link(vchart, chart);
     const idxOf = t => lastBars.findIndex(x => x.time === t);
     // 한쪽 차트에서 움직이면 다른 쪽엔 같은 날짜만 맞춰 표시. 코드로 옮긴 십자선 이벤트(사람이 움직인 게 아님)는 무시해서
@@ -1472,7 +1487,7 @@ const TA = (() => {
     volMa.setData(lastRaw.map((r, i) => vm[i] == null ? null : { time: r[0], value: vm[i] }).filter(Boolean));
     fitChart();
     const i = lastBars.length - 1;
-    $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i);
+    $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i); fitTopMargin();
     drawPatterns(TA_STATE.sym === S.sel ? TA_STATE.an : null);
     $("#patTog").hidden = TA_STATE.sym !== S.sel;
     document.querySelectorAll("#watchBody tr[data-sym]").forEach(tr => tr.classList.toggle("sel", tr.dataset.sym === S.sel));
@@ -2129,7 +2144,7 @@ ${JSON.stringify(need)}`;
     volMa.setData(lastRaw.map((r, i) => vm[i] == null ? null : { time: r[0], value: vm[i] }).filter(Boolean));
     const i = lastBars.length - 1;
     $("#chartHead").innerHTML = chartHeadHTML(); $("#stats").innerHTML = statsHTML();
-    $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i);
+    $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i); fitTopMargin();
   }
   // 다 받고 나면 앱 브라우저 창을 거의 빈 화면(야후 아이콘)으로 돌려서 시세 원본 글자가 남지 않게
   async function blankPane(){
@@ -2764,7 +2779,7 @@ ${JSON.stringify(data)}`;
   document.querySelectorAll("[data-ma]").forEach(btn => btn.addEventListener("click", () => {
     const k = btn.dataset.ma; S.ma[k] = !S.ma[k]; store.set("mt-ma", S.ma); btn.setAttribute("aria-pressed", S.ma[k]);
     if (maS[k]) maS[k].setData(S.ma[k] ? maData(+k) : []);
-    const i = lastBars.length - 1; if (i >= 0) $("#legend").innerHTML = legendHTML(lastBars[i], i);
+    const i = lastBars.length - 1; if (i >= 0) { $("#legend").innerHTML = legendHTML(lastBars[i], i); fitTopMargin(); }
   }));
   document.querySelectorAll("[data-ma]").forEach(btn => btn.setAttribute("aria-pressed", !!S.ma[btn.dataset.ma]));
   document.querySelectorAll("#typeSeg [data-ct]").forEach(b => b.setAttribute("aria-pressed", b.dataset.ct === S.ctype));
