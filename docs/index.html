@@ -425,6 +425,27 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
 .pk-news a{color:var(--fg);text-decoration:none;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pk-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pk-foot{margin-top:12px;display:grid;gap:6px;justify-items:start}
+/* 차트 크게 보기 */
+#fsBtn{opacity:1}
+html.fs-lock,html.fs-lock body{overflow:hidden}
+.chart-panel.fs{position:fixed;inset:0;z-index:80;margin:0;border-radius:0;overflow-y:auto;background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+.chart-panel.fs #chart{height:calc(100dvh - 330px);min-height:300px}
+.chart-panel.fs #volchart{height:80px}
+.chart-panel.fs .stats{display:none}
+.chart-panel.fs .ph #taBtn{display:none}
+.fs-pats{padding:10px 14px 14px;border-top:1px solid var(--line-2);display:grid;gap:10px}
+.fs-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:13px}
+.fs-list{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.fs-pat{flex:none;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;text-align:left;min-width:150px;border:1px solid var(--line);border-left:3px solid var(--dim);border-radius:8px;background:var(--panel-2);color:var(--fg);padding:8px 10px;cursor:pointer;font:inherit}
+.fs-pat.bull{border-left-color:var(--up)} .fs-pat.bear{border-left-color:var(--down)}
+.fs-pat.on{outline:2px solid var(--pat);outline-offset:-1px}
+.fs-pat > span{grid-row:1/4;font-size:16px;font-weight:800;color:var(--muted)} .fs-pat b{font-size:13.5px} .fs-pat small{font-size:11px;color:var(--muted)}
+.fs-pat .conf,.pat .conf{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden} .fs-pat .conf i{display:block;height:100%;background:var(--pat)}
+.fs-sel{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5}
+.fs-sel p{margin:3px 0 0;color:var(--muted)} .fs-sel .schema{width:96px;height:48px}
+.fs-empty{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pat{cursor:pointer;transition:outline-color .15s} .pat.on{outline:2px solid var(--pat);outline-offset:-1px}
+.prank{display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--muted)} .prank b{color:var(--pat)}
 .tone{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap;flex:none}
 .tone.good{background:var(--up-bg);color:var(--up)} .tone.bad{background:var(--down-bg);color:var(--down)} .tone.neutral{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
 .tone.rule{opacity:.85}
@@ -744,7 +765,7 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
       <div class="pb"><p class="hint" id="moverNote" style="margin:0 0 6px"></p><ul class="list movers" id="movers"></ul><div class="more-wrap" id="moverMore"></div></div>
     </section>
 
-    <section class="panel stock-only" aria-labelledby="h-chart">
+    <section class="panel stock-only chart-panel" id="chartPanel" aria-labelledby="h-chart">
       <div class="ph"><h2 id="h-chart">차트</h2><select id="symSel" aria-label="차트 종목 선택"></select>
         <button type="button" class="ta-btn" id="taBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M1.5 12.5l4-4.5 3 2.5 6-7"/><path d="M11 3.5h3.5V7"/></svg>기술적 분석</button></div>
       <div class="chart-head" id="chartHead"></div>
@@ -756,6 +777,7 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
           <button type="button" data-r="1Y" aria-pressed="false">1Y</button>
         </div>
         <button type="button" class="tog fit-btn" id="fitBtn" title="차트를 다시 화면에 맞추기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>맞춤</button>
+        <button type="button" class="tog fit-btn" id="fsBtn" title="차트만 크게 보기" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4M2 2l4 4M14 2l-4 4M2 14l4-4M14 14l-4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>크게</span></button>
         <div class="seg" id="typeSeg" aria-label="차트 종류">
           <button type="button" data-ct="candle" aria-pressed="true">캔들</button>
           <button type="button" data-ct="bar" aria-pressed="false">막대</button>
@@ -770,6 +792,7 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
       </div>
       <div id="chart"><div class="legend num" id="legend"></div></div>
       <div class="vol-wrap"><div class="vol-label num" id="volLegend"></div><div id="volchart"></div></div>
+      <div class="fs-pats" id="fsPats" hidden></div>
       <div class="stats" id="stats"></div>
     </section>
   </div>
@@ -1409,7 +1432,10 @@ const TA = (() => {
     chart.timeScale().setVisibleLogicalRange({ from: i0 - 0.5, to: lastBars.length - 1 + 3 });
   }
   /* 패턴 그리기 */
-  function clearOverlay(){ overlay.forEach(s => chart.removeSeries(s)); overlay = []; main?.setMarkers([]); }
+  let patLines = [];
+  function clearOverlay(){ overlay.forEach(s => chart.removeSeries(s)); overlay = []; patLines.forEach(l => { try { main.removePriceLine(l); } catch {} }); patLines = []; main?.setMarkers([]); }
+  // 차트에는 고른 패턴 하나만 (기본: 가능성 1순위). 아래 목록에서 다른 패턴을 누르면 바뀜
+  const patSel = an => { const i = TA_STATE.pi | 0; return an?.patterns?.[i] ? i : 0; };
   function drawPatterns(an){
     clearOverlay();
     if (!an || !S.showPat || !chart) return;
@@ -1417,7 +1443,8 @@ const TA = (() => {
     const add = (data, opt) => { const clean = []; data.forEach(d => { if (!clean.length || clean[clean.length - 1].time < d.time) clean.push(d); });
       if (clean.length < 2) return; const s = chart.addLineSeries({ ...base, ...opt }); s.setData(clean); overlay.push(s); };
     const markers = [];
-    an.patterns.slice(0, 3).forEach((p, idx) => {
+    const sel = patSel(an);
+    an.patterns.slice(sel, sel + 1).forEach((p, idx) => {
       const col = p.bias === "bull" ? css("--up") : p.bias === "bear" ? css("--down") : pc;
       if (p.key === "cup" && p.curve){
         const { from, to } = p.curve, seg = lastBars.slice(from, to + 1), m = seg.length - 1;
@@ -1431,11 +1458,25 @@ const TA = (() => {
       } else if (p.points.length) add(p.points, { color: alpha(pc, 0.9), lineWidth: 2 });
       p.lines.forEach(l => add([l.a, l.b], { color: col, lineWidth: 1, lineStyle: 2 }));
       const at = p.points.length ? p.points[Math.floor(p.points.length / 2)] : p.lines[0]?.b;
-      if (at) markers.push({ time: at.time, position: p.bias === "bear" ? "aboveBar" : "belowBar", color: col, shape: p.bias === "bear" ? "arrowDown" : "arrowUp", text: p.ko });
+      if (at) markers.push({ time: at.time, position: p.bias === "bear" ? "aboveBar" : "belowBar", color: col, shape: p.bias === "bear" ? "arrowDown" : "arrowUp", text: `${sel + 1}순위 ${p.ko}` });
+      // 목표가·무효화(손절) 가격을 가로선으로
+      const pl = (price, color, title, style) => { if (price == null || !isFinite(price)) return; try { patLines.push(main.createPriceLine({ price, color, lineWidth: 1, lineStyle: style, axisLabelVisible: true, title })); } catch {} };
+      pl(p.levels.target, col, "목표", 2);
+      pl(p.levels.invalidation, css("--muted"), "손절", 1);
     });
     (an.crosses || []).forEach(c => markers.push({ time: c.at, position: c.key === "gc" ? "belowBar" : "aboveBar", color: c.key === "gc" ? css("--up") : css("--down"), shape: "circle", text: c.ko + " " + c.maPair.join("/") }));
     markers.sort((a, b) => a.time < b.time ? -1 : 1);
     main.setMarkers(markers);
+  }
+  // 고른 패턴 구간이 화면에 크게 보이도록 시간축 맞춤
+  function focusPattern(p){
+    if (!p || !chart || !lastBars.length) return;
+    const ts = [...p.points.map(x => x.time), ...p.lines.flatMap(l => [l.a.time, l.b.time])];
+    if (p.curve) ts.push(lastBars[p.curve.from]?.time);
+    const idx = ts.filter(Boolean).map(t => lastBars.findIndex(b => b.time >= t)).filter(i => i >= 0);
+    if (!idx.length) return;
+    const last = lastBars.length - 1, a = Math.min(...idx), span = Math.max(20, last - a);
+    chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, a - Math.round(span * 0.25)), to: last + 3 });
   }
   function statsHTML(){
     const raw = DATA.candles[S.sel] || [], q = quoteOf(S.sel) || {}; if (!raw.length) return "";
@@ -2608,13 +2649,42 @@ ${JSON.stringify(need)}`;
     const an = TA.analyze(bars);
     if (!an){ return; }
     TA_STATE.ctl?.abort();
-    Object.assign(TA_STATE, { sym: S.sel, an, ai: null, aiErr: null, busy: false });
+    Object.assign(TA_STATE, { sym: S.sel, an, ai: null, aiErr: null, busy: false, pi: 0 });
     $("#taPanel").hidden = false; $("#patTog").hidden = false;
-    drawPatterns(an); renderTA();
+    drawPatterns(an); renderTA(); renderFsPats();
     $("#taPanel").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
     if (SAMPLE || (API.ai && (!API.aiCode || aiCode()))) askAI();
   }
-  function hideTA(){ TA_STATE.ctl?.abort(); Object.assign(TA_STATE, { sym: null, an: null, ai: null, busy: false }); $("#taPanel").hidden = true; $("#patTog").hidden = true; clearOverlay(); }
+  function hideTA(){ TA_STATE.ctl?.abort(); Object.assign(TA_STATE, { sym: null, an: null, ai: null, busy: false, pi: 0 }); $("#taPanel").hidden = true; $("#patTog").hidden = true; clearOverlay(); renderFsPats(); }
+  /* 차트만 크게 보기: 화면 전체를 차트로, 아래에 가능성 있는 패턴 목록(눌러서 차트에 표시) */
+  function renderFsPats(){
+    const box = $("#fsPats"); if (!box) return;
+    const an = TA_STATE.sym === S.sel ? TA_STATE.an : null;
+    if (!$("#chartPanel").classList.contains("fs")){ box.hidden = true; return; }
+    box.hidden = false;
+    if (!an){ box.innerHTML = `<div class="fs-empty">기술적 분석을 켜면 여기에 가능성 있는 차트 패턴이 나와요. <button type="button" class="ta-btn" data-fs="ta">기술적 분석</button></div>`; return; }
+    const sel = patSel(an), sym = TA_STATE.sym, p = an.patterns[sel];
+    box.innerHTML = `<div class="fs-head"><b>가능성 있는 패턴 ${an.patterns.length}개</b><span class="muted">눌러서 차트에 보기 · 종합 ${an.score}점 ${esc(an.signal)}</span></div>
+      ${an.patterns.length ? `<div class="fs-list">${an.patterns.map((q, i) => `<button type="button" class="fs-pat ${q.bias}${i === sel ? " on" : ""}" data-pi="${i}" aria-pressed="${i === sel}">
+          <span class="num">${i + 1}</span><b>${esc(q.ko)}</b><small>${esc(q.status)} · 신뢰도 ${q.confidence}</small><i class="conf"><i style="width:${q.confidence}%"></i></i></button>`).join("")}</div>
+        ${p ? `<div class="fs-sel">${schemaSVG(p.key, p.bias)}<div><b>${esc(p.ko)}</b> <span class="muted">${p.bias === "bull" ? "상승형" : p.bias === "bear" ? "하락형" : "중립"}</span><p>${esc(p.desc)}</p>
+          <p class="num">${p.levels.neckline != null ? `${p.key === "cup" ? "테두리" : "넥라인"} ${fmtPrice(p.levels.neckline, sym)} · ` : ""}${p.levels.target != null ? `목표 ${fmtPrice(p.levels.target, sym)}` : ""}${p.levels.invalidation != null ? ` · 무효화 ${fmtPrice(p.levels.invalidation, sym)}` : ""}</p></div></div>` : ""}`
+      : `<p class="muted" style="margin:0">최근 구간에서 뚜렷한 패턴이 없어요. 이동평균·RSI·MACD 판정은 아래 기술적 분석 화면에서 볼 수 있어요.</p>`}`;
+  }
+  function setFs(on){
+    const pnl = $("#chartPanel"); if (pnl.classList.contains("fs") === on) return;
+    pnl.classList.toggle("fs", on); document.documentElement.classList.toggle("fs-lock", on);
+    $("#fsBtn").setAttribute("aria-pressed", on); $("#fsBtn").querySelector("span").textContent = on ? "닫기" : "크게";
+    if (on){ try { history.pushState({ ...(history.state || {}), fs: 1 }, ""); } catch {} }
+    renderFsPats();
+    setTimeout(() => { fitTopMargin(); }, 60);
+  }
+  $("#fsBtn").addEventListener("click", () => { if ($("#chartPanel").classList.contains("fs")) history.state?.fs ? history.back() : setFs(false); else setFs(true); });
+  addEventListener("keydown", e => { if (e.key === "Escape" && $("#chartPanel").classList.contains("fs")) $("#fsBtn").click(); });
+  $("#fsPats").addEventListener("click", e => {
+    const b = e.target.closest("[data-pi]"); if (b){ pickPattern(+b.dataset.pi, false); return; }
+    if (e.target.closest('[data-fs="ta"]')) $("#taBtn").click();
+  });
 
   function aiPrompt(an){
     const name = nameOf(TA_STATE.sym), sym = TA_STATE.sym;
@@ -2696,8 +2766,10 @@ ${JSON.stringify(data)}`;
     const lv = (k, v) => `<li><span>${k}</span><b class="num">${v == null ? "–" : fmtPrice(v, sym)} ${fromClose(v, c)}</b></li>`;
     const checks = an.checks.map(x => `<li><i class="dotc ${x.s > 0.4 ? "up" : x.s < -0.4 ? "down" : "flat"}"></i><span>${esc(x.k)}</span><b>${esc(x.v)}</b></li>`).join("");
     const aiPat = n => ai?.patterns?.find(p => n && p.name && (p.name.includes(n.ko.split(" ")[0]) || p.name.toLowerCase().includes(n.en.toLowerCase().split(" ")[0])));
-    const pats = an.patterns.map(p => { const v = aiPat(p); return `
-      <article class="pat ${p.bias}">
+    const selI = patSel(an);
+    const pats = an.patterns.map((p, pi) => { const v = aiPat(p); return `
+      <article class="pat ${p.bias}${pi === selI ? " on" : ""}" data-pi="${pi}" tabindex="0" role="button" aria-pressed="${pi === selI}" aria-label="${esc(p.ko)} 차트에 보기">
+        <div class="prank"><span class="num">${pi + 1}순위</span>${pi === selI ? '<b>차트에 표시 중</b>' : '<span>눌러서 차트에 보기</span>'}</div>
         <header><span class="pname">${esc(p.ko)}</span><span class="pen">${esc(p.en)}</span><span class="side-pill ${p.bias === "bull" ? "buy" : p.bias === "bear" ? "sell" : ""}">${p.bias === "bull" ? "상승형" : p.bias === "bear" ? "하락형" : "중립"}</span></header>
         <div class="pstat"><span class="${p.confirmed ? "ok" : ""}">${esc(p.status)}</span><span class="conf"><i style="width:${p.confidence}%"></i></span><span class="num">신뢰도 ${p.confidence}</span></div>
         <div class="pdesc">${schemaSVG(p.key, p.bias)}<p>${esc(p.desc)}</p></div>
@@ -2762,7 +2834,15 @@ ${JSON.stringify(data)}`;
     try { localStorage.setItem("mt-ai-code", v); } catch {}
     TA_STATE.aiErr = null; askAI();
   });
+  function pickPattern(pi, scroll){
+    if (!TA_STATE.an?.patterns?.[pi]) return;
+    TA_STATE.pi = pi; S.showPat = true; $("#patTog").setAttribute("aria-pressed", true);
+    drawPatterns(TA_STATE.an); focusPattern(TA_STATE.an.patterns[pi]); renderTA(); renderFsPats();
+    if (scroll && !$("#chartPanel").classList.contains("fs")) $("#chartPanel").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+  $("#taPanel").addEventListener("keydown", e => { const c = e.target.closest("[data-pi]"); if (c && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); pickPattern(+c.dataset.pi, true); } });
   $("#taPanel").addEventListener("click", e => {
+    const c = e.target.closest("[data-pi]"); if (c && !e.target.closest("a,button")){ pickPattern(+c.dataset.pi, true); return; }
     const b = e.target.closest("[data-ai]"); if (!b) return;
     const a = b.dataset.ai;
     if (a === "close") hideTA();
@@ -3606,7 +3686,7 @@ ${JSON.stringify(ctx)}
     const e = { sym, name: name || nameOf(sym) };
     if (await ensureCandles(e, true)) openStockPage(sym); else showNoData(e);
   }
-  window.addEventListener("popstate", ev => { const s = ev.state?.sym; if (s && DATA?.candles?.[s]) openStockPage(s, false); else if (S.mode === "stock") goHome(false); });
+  window.addEventListener("popstate", ev => { if ($("#chartPanel").classList.contains("fs") && !ev.state?.fs){ setFs(false); return; } const s = ev.state?.sym; if (s && DATA?.candles?.[s]) openStockPage(s, false); else if (S.mode === "stock") goHome(false); });
   $("#backHome").addEventListener("click", () => goHome());
   document.querySelector(".brand").addEventListener("click", () => { setView("market"); goHome(); });
 
