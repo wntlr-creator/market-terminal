@@ -88,7 +88,7 @@ def http(url, ua=None, data=None, headers=None, timeout=40):
             return out
         except urllib.error.HTTPError as e:
             body = ""
-            try: body = e.read()[:160].decode("utf-8", "ignore").replace("\n", " ")
+            try: body = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", e.read().decode("utf-8", "ignore")))[:300]
             except Exception: pass
             log("SEC", e.code, url.split("sec.gov")[1][:60], "UA#", SEC_UAS.index(u) if u in SEC_UAS else "?", body)
             last = e
