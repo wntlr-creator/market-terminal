@@ -3251,9 +3251,10 @@ ${JSON.stringify(data)}`;
      종목 찾기 → 일봉 확보 → 기술적 분석(규칙 기반 점수·가격대) → 뉴스 → AI 해석
      점수·가격대는 화면이 계산한 값이라 AI가 지어내지 않아요. AI는 그 데이터를 읽고 설명만 해요. */
   const CHAT = { msgs: [], busy: false, ctl: null, sym: null, t0: 0, timer: null, lines: [] };
-  try { const sv = JSON.parse(localStorage.getItem("mt-chat") || "null"); if (Array.isArray(sv?.msgs)) Object.assign(CHAT, { msgs: sv.msgs.slice(-30), sym: sv.sym || null }); } catch {}
+  // 앱을 열 때마다 AI 애널리스트는 빈 화면(예시 질문)부터 시작 — 지난 대화는 불러오지 않음
+  try { localStorage.removeItem("mt-chat"); } catch {}
   try { $("#chatEasy").checked = localStorage.getItem("mt-chat-easy") === "1"; } catch {}
-  const saveChat = () => { try { localStorage.setItem("mt-chat", JSON.stringify({ msgs: CHAT.msgs.slice(-30), sym: CHAT.sym })); } catch {} };
+  const saveChat = () => {};
   const aiReady = () => !!(SAMPLE || (API.ai && (!API.aiCode || aiCode())));
 
   function openChat(){
