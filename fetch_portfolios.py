@@ -31,7 +31,10 @@ CUSIP_CACHE = ROOT / "data" / "cusip_map.json"
 ARK_LAST = ROOT / "data" / "ark_last.json"
 KST = timezone(timedelta(hours=9))
 
-SEC_UA = os.environ.get("SEC_USER_AGENT", "").strip() or "YH Market Terminal (set SEC_USER_AGENT)"
+# SEC는 '이름 + 연락 이메일' 형식이 아닌 User-Agent를 403으로 막아요. 비밀값이 없으면 GitHub noreply 주소를 씀
+SEC_UA = os.environ.get("SEC_USER_AGENT", "").strip()
+if "@" not in SEC_UA:
+    SEC_UA = "YH Market Terminal wntlr-creator@users.noreply.github.com"
 BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
 TOP_N = {"buffett": 60, "cathie": 40, "goldman": 40}
