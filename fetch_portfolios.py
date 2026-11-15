@@ -21,6 +21,7 @@ import re
 import sys
 import time
 import urllib.request
+import urllib.error
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -61,12 +62,38 @@ def log(*a):
     print("[portfolios]", *a, file=sys.stderr)
 
 
-def http(url, ua=SEC_UA, data=None, headers=None, timeout=40):
-    h = {"User-Agent": ua, "Accept-Encoding": "identity"}
+SEC_UAS = [SEC_UA, "YH Market Terminal admin@wntlr-creator.github.io",
+           "Mozilla/5.0 (compatible; YHMarketTerminal/1.0) wntlr-creator@users.noreply.github.com"]
+_sec_ok = None
+
+
+def _get(url, ua, data=None, headers=None, timeout=40):
+    h = {"User-Agent": ua, "Accept-Encoding": "identity", "Accept": "*/*"}
     h.update(headers or {})
     req = urllib.request.Request(url, data=data, headers=h)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
+
+
+def http(url, ua=None, data=None, headers=None, timeout=40):
+    global _sec_ok
+    if ua is not None or "sec.gov" not in url:
+        return _get(url, ua or SEC_UA, data, headers, timeout)
+    last = None
+    for u in ([_sec_ok] if _sec_ok else SEC_UAS):
+        try:
+            out = _get(url, u, data, headers, timeout)
+            if _sec_ok != u:
+                log("SEC 접속 성공 UA:", u.split()[0], "..."); _sec_ok = u
+            return out
+        except urllib.error.HTTPError as e:
+            body = ""
+            try: body = e.read()[:160].decode("utf-8", "ignore").replace("\n", " ")
+            except Exception: pass
+            log("SEC", e.code, url.split("sec.gov")[1][:60], "UA#", SEC_UAS.index(u) if u in SEC_UAS else "?", body)
+            last = e
+            time.sleep(1)
+    raise last
 
 
 def next_13f_deadline(today=None):
