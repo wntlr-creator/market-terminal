@@ -410,6 +410,7 @@ def main():
     inv_data = data.setdefault("investors", {})
     cache = json.loads(CUSIP_CACHE.read_text(encoding="utf-8")) if CUSIP_CACHE.exists() else {}
     changed = []
+    sec_fail = 0
     for inv in INVESTORS_13F:
         try:
             entry, is_new = build_13f(inv, inv_data.get(inv["id"]), cache)
@@ -418,6 +419,7 @@ def main():
                 changed.append(inv["id"])
         except Exception as e:  # noqa: BLE001
             log(inv["id"], "13F 실패 (이전 값 유지)", e)
+            sec_fail += 1
         time.sleep(0.5)
     try:
         inv_data["cathie"] = ark_daily(inv_data.get("cathie", {}))
@@ -433,6 +435,7 @@ def main():
     data["meta"] = {**data.get("meta", {}),
                     "checked": datetime.now(KST).isoformat(timespec="seconds"),
                     "next13F": next_13f_deadline(),
+                    "secBlocked": sec_fail == len(INVESTORS_13F),
                     "lastChanged": changed or data.get("meta", {}).get("lastChanged", [])}
     CUSIP_CACHE.parent.mkdir(parents=True, exist_ok=True)
     CUSIP_CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=0), encoding="utf-8")

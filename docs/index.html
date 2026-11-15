@@ -2537,7 +2537,7 @@ ${JSON.stringify(need)}`;
     const line = up.length || dn.length ? `${up.length ? `<b class="up">${josa(up.join("·"), "은", "는")}</b> 늘리고` : ""}${up.length && dn.length ? ", " : ""}${dn.length ? `<b class="down">${josa(dn.join("·"), "은", "는")}</b> 줄였어요` : "어요"}` : "큰 변화 없이 그대로 들고 있어요";
     const c = v.counts || {}, q = (v.period || "").slice(0, 7);
     const qName = q ? `${q.slice(0, 4)}년 ${Math.ceil(+q.slice(5, 7) / 3)}분기` : "";
-    const foot = `${qName} 말 기준 · ${v.filed || ""} 공개 (3개월쯤 늦게 공개돼요)`;
+    const foot = `${qName} 말 기준 · ${v.filed || ""} 공개 (3개월쯤 늦게 공개돼요)${meta?.secBlocked ? `<br><b class="down">⚠ 지금 SEC(미국 공시 사이트) 자동 접속이 막혀 새 보고서를 못 받고 있어요</b>` : ""}`;
     const li = (arr, f) => `<ul class="ez-list">${arr.map(f).join("")}</ul>`;
     const top = H.slice().sort((a, b) => b.weight - a.weight).slice(0, 5), mx = top[0]?.weight || 1;
     const dd = meta?.next13F ? Math.ceil((Date.parse(meta.next13F) - Date.parse(kstDay(Date.now()))) / 864e5) : null;
