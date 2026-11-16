@@ -8,4 +8,10 @@ def get(u):
         return str(e), ""
 for u in sys.argv[1:]:
     st, b = get(u)
-    print("=====", u, st, len(b)); print(b[:2500])
+    print("=====", u, st, len(b))
+    try:
+        j = json.loads(b)
+        if isinstance(j, dict):
+            for k, v in j.items(): print("  KEY", k, json.dumps(v, ensure_ascii=False)[:400])
+        else: print(json.dumps(j, ensure_ascii=False)[:1500])
+    except Exception: print(b[:800])

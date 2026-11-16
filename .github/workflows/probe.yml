@@ -6,4 +6,4 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - run: python tools/probe.py "https://m.stock.naver.com/api/news/stock/005930?pageSize=3" "https://m.stock.naver.com/api/stock/005930/integration" "https://feeds.finance.yahoo.com/rss/2.0/headline?s=NBIS&region=US&lang=en-US" "https://query2.finance.yahoo.com/v6/finance/recommendationsbysymbol/NBIS" "https://query1.finance.yahoo.com/v1/finance/search?q=NBIS&newsCount=5&quotesCount=0" "https://api.stock.naver.com/stock/NBIS.O/basic" "https://m.stock.naver.com/api/stock/005930/industry"
+      - run: python tools/probe.py "https://api.stock.naver.com/news/worldStock/NBIS.O?pageSize=3" "https://api.stock.naver.com/news/stock/NBIS.O?pageSize=3" "https://m.stock.naver.com/api/news/worldStock/NBIS.O?pageSize=3" "https://api.stock.naver.com/stock/NBIS.O/integration" "https://m.stock.naver.com/api/stock/005930/integration" "https://api.stock.naver.com/stock/NBIS.O/basic" "https://m.stock.naver.com/api/stock/005930/basic"
