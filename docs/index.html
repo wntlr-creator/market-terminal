@@ -216,6 +216,16 @@ select{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;
 .hint{font-size:11.5px;color:var(--dim);margin-top:8px}
 
 .news{list-style:none;margin:0;padding:0;max-height:620px;overflow-y:auto}
+.nsum{padding:4px 0 12px !important}
+.nsum-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:13px;margin-bottom:6px}
+.nsum ol{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.nsum ol li{border:1px solid var(--line-2);border-radius:8px;padding:10px 12px;background:var(--panel-2)}
+.nsum ol b{display:block;font-size:14px;line-height:1.45;margin:2px 0 4px}
+.nsum ol p{margin:0 0 6px;font-size:13px;line-height:1.6;color:var(--fg);opacity:.9}
+.nsum .meta a{color:var(--accent,var(--pat));text-decoration:none;margin-left:auto}
+.nsum-note{margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+.nmore-h{font-size:12.5px;font-weight:700;padding:12px 0 4px !important;border-bottom:0 !important}
+.rel-ov{text-align:left !important;font-size:12.5px;line-height:1.6;padding:6px 0 10px !important}
 .news li{padding:10px 0;border-bottom:1px solid var(--line-2)}
 .news li:last-child{border-bottom:0}
 .news a{display:block;font-size:13.5px;line-height:1.45;text-wrap:pretty}
@@ -832,7 +842,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
     </section>
 
     <section class="panel stock-only" aria-labelledby="h-rel">
-      <div class="ph"><h2 id="h-rel">연관 종목</h2><span class="muted" style="font-size:12px">공급·납품·고객 관계</span></div>
+      <div class="ph"><h2 id="h-rel">연관 종목</h2><span class="muted" id="relSub" style="font-size:12px">공급·납품·고객 관계</span></div>
       <div class="pb"><ul class="list rel-list" id="related"></ul></div>
     </section>
   </div>
@@ -1706,6 +1716,34 @@ ${JSON.stringify(need)}`;
       return `<li><a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(ko || n.title)}</a>
       <div class="meta">${toneBadge(n)}${n.tag && S.mode === "home" ? `<span class="tag">${esc(n.tag)}</span>` : ""}<span>${esc(n.source)}</span><span>${ago(n.time)}</span>${ko || hasKo(n.title) ? "" : `<span class="tr-tag">영문</span>`}</div></li>`; }).join("");
   }
+  /* 종목별 뉴스·업종·함께 보는 종목 (build_news.py가 하루 몇 번 모아 둠) */
+  const NS = { idx: null, sh: {}, hit: {} };
+  async function newsInfo(sym){
+    if (sym in NS.hit) return NS.hit[sym];
+    try {
+      NS.idx = NS.idx || fetchD("news/index.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
+      const idx = await NS.idx; if (!idx?.shards) return (NS.hit[sym] = null);
+      let h = 0; for (const ch of sym) h = (h * 31 + ch.charCodeAt(0)) % 1000003;
+      const k = String(h % idx.shards).padStart(2, "0");
+      NS.sh[k] = NS.sh[k] || fetchD(`news/s${k}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+      return (NS.hit[sym] = (await NS.sh[k])[sym] || null);
+    } catch { return (NS.hit[sym] = null); }
+  }
+  // 기사 앞부분에서 첫 문장(리드)만
+  const leadOf = b => { b = String(b || "").replace(/^\s*[\(\[]?[가-힣A-Za-z· ]{2,12}[=\)\]]\s*/, "").replace(/^[가-힣]{2,4} ?기자 ?=?\s*/, "").trim();
+    const m = b.match(/^(.{25,180}?(다|요|음|함|됨)\.|.{25,200}?[.!?])(\s|$)/); return (m ? m[1] : b).replace(/…$/, "") + (m ? "" : (b.length > 0 ? "…" : "")); };
+  // 제목에 이 종목 이름이 나오는 기사를 요약 맨 위로
+  const mentions = (n, sym) => { const nm = nameOf(sym) || "", keys = [nm, nm.replace(/(주식회사|\(주\)|홀딩스|그룹)$/,""), sym.replace(/\.(KS|KQ)$/, ""), (nm.split(/[ ,.]/)[0] || "")].filter(k => k && k.length >= 2);
+    const t = (TR[n.title] || n.title || "").toLowerCase(); return keys.some(k => t.includes(k.toLowerCase())); };
+  const summaryPick = (rows, sym) => rows.filter(n => n.body).map((n, i) => [n, (mentions(n, sym) ? 0 : 100) + i]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(x => x[0]);
+  function newsSummaryHTML(rows, sym){
+    const tones = rows.map(n => toneOf(n.title).tone), cnt = t => tones.filter(x => x === t).length;
+    const top = summaryPick(rows, sym);
+    if (!top.length) return "";
+    return `<li class="nsum"><div class="nsum-h"><b>핵심 요약</b><span class="muted">최근 기사 ${rows.length}건 · <span class="up">호재 ${cnt("good")}</span> · <span class="down">악재 ${cnt("bad")}</span> · 중립 ${rows.length - cnt("good") - cnt("bad")}</span></div>
+      <ol>${top.map(n => `<li>${toneBadge(n)}<b>${esc(TR[n.title] || n.title)}</b><p>${esc(leadOf(n.body))}</p><div class="meta"><span>${esc(n.source)}</span><span>${ago(n.time)}</span>${n.lang === "en" ? `<span class="tr-tag">영문</span>` : ""}${n.link ? `<a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">원문 →</a>` : ""}</div></li>`).join("")}</ol>
+      <p class="nsum-note">기사 첫 문장을 모아 정리했어요. 호재·악재는 제목 키워드로 자동 분류한 추정이에요.</p></li>`;
+  }
   function renderNews(){
     if (!DATA) return;
     const home = S.mode !== "stock", sym = S.sel;
@@ -1715,18 +1753,31 @@ ${JSON.stringify(need)}`;
       title = "시장 뉴스"; q = "증시";
     } else {
       if (!sym) return;
-      const name = nameOf(sym); all = newsFor(sym); title = `${name} 뉴스`; sub = INDEX_NEWS[sym] ? `'${INDEX_NEWS[sym]}' 관련` : ""; q = INDEX_NEWS[sym] || name;
+      const name = nameOf(sym); all = newsFor(sym); title = `${name} 뉴스`;
+      if (!(sym in NS.hit)) newsInfo(sym).then(() => { if (S.sel === sym && S.mode === "stock") renderNews(); });
+      const ni = NS.hit[sym];
+      if (ni?.n?.length){
+        const ext = ni.n.map(([t, b, src, time, link, lang]) => ({ title: t, body: b, source: src, time, link, lang, sym }));
+        const seen = new Set(all.map(n => (n.title || "").replace(/\W/g, "").slice(0, 30)));
+        all = ext.concat(all.filter(n => !ext.some(e => e.title.replace(/\W/g, "").slice(0, 30) === (n.title || "").replace(/\W/g, "").slice(0, 30)))).sort((a, b) => (b.time || "").localeCompare(a.time || ""));
+        void seen;
+      } sub = INDEX_NEWS[sym] ? `'${INDEX_NEWS[sym]}' 관련` : ""; q = INDEX_NEWS[sym] || name;
     }
     // 번역할 수 없는 곳에서는, 한국어 기사가 충분하면 영어 기사는 빼기
     const canTr = !!(SAMPLE || (API.ai && (!API.aiCode || aiCode())));
     if (!canTr && all.filter(n => hasKo(n.title)).length >= 3) all = all.filter(n => hasKo(n.title));
-    const rows = all.slice(0, limitOf("news", all.length, 5));
     $("#h-news").textContent = title; $("#newsSub").textContent = sub;
-    const more = `<li class="empty"><a href="https://news.google.com/search?q=${encodeURIComponent(q)}&hl=ko&gl=KR&ceid=KR:ko" target="_blank" rel="noopener noreferrer">구글 뉴스에서 '${esc(q)}' 최신 뉴스 더 보기 →</a></li>`;
-    $("#news").innerHTML = newsRowsHTML(rows)
-      + (all.length > 6 ? `<li class="more-li">${moreBar("news", all.length, 5, "뉴스")}</li>` : "")
-      + (rows.length ? "" : `<li class="empty">${!home && (API.on || (LIVE.mode === "browser" && LIVE.auto)) && !NEWS_CACHE[sym] ? "뉴스를 불러오는 중…" : "받아 둔 뉴스가 없어요."}</li>`) + more;
-    const untr = rows.filter(n => !hasKo(n.title) && !TR[n.title]).map(n => n.title);
+    // 종목 화면: 위에 핵심 요약(기사 첫 문장 3개), 아래에 나머지 기사 제목 — 더 궁금할 때만 눌러서 원문으로
+    const summ = home ? "" : newsSummaryHTML(all.slice(0, 10), sym);
+    const picked = summ ? summaryPick(all.slice(0, 10), sym) : [];
+    const restAll = all.filter(n => !picked.includes(n));
+    const rows = restAll.slice(0, limitOf("news", restAll.length, 5));
+    const pending = !home && !(sym in NS.hit);
+    const more = rows.length || summ ? "" : `<li class="empty"><a href="https://news.google.com/search?q=${encodeURIComponent(q)}&hl=ko&gl=KR&ceid=KR:ko" target="_blank" rel="noopener noreferrer">구글 뉴스에서 '${esc(q)}' 찾아보기 →</a></li>`;
+    $("#news").innerHTML = summ + (summ && rows.length ? `<li class="nmore-h">추가 뉴스 <span class="muted">· 눌러서 원문 보기</span></li>` : "") + newsRowsHTML(rows)
+      + (restAll.length > 6 ? `<li class="more-li">${moreBar("news", restAll.length, 5, "뉴스")}</li>` : "")
+      + (rows.length || summ ? "" : `<li class="empty">${pending || (!home && (API.on || (LIVE.mode === "browser" && LIVE.auto)) && !NEWS_CACHE[sym]) ? "뉴스를 불러오는 중…" : "받아 둔 뉴스가 없어요."}</li>`) + more;
+    const untr = rows.concat(picked).filter(n => !hasKo(n.title) && !TR[n.title]).map(n => n.title);
     if (untr.length && canTr) translateTitles(all.slice(0, 20).map(n => n.title)).then(ok => { if (ok) renderNews(); });
     else if (SAMPLE && rows.some(n => !TONE[n.title]?.ai && !toneTried.has(n.title))) classifyTitles(rows.map(n => n.title)).then(ok => { if (ok) renderNews(); });
     if (!home && !API.on && !NEWS_CACHE[sym]) fetchNewsBrowser(sym).then(ok => { if (ok && S.sel === sym && S.mode === "stock") renderNews(); });
@@ -3744,13 +3795,18 @@ ${JSON.stringify(ctx)}
   const US_SECTOR = {}; for (const [g, list] of Object.entries(US_GROUPS)) list.split(" ").forEach(s => US_SECTOR[s] = g);
   const relLI = (sym, name, right, why, go = true) => `<li class="${go ? "go" : ""}" ${go ? `data-go="${esc(sym)}" data-go-name="${esc(name)}" tabindex="0"` : ""}><span class="mv-nm"><b>${esc(name)}</b><small>${esc(sym)}</small>${why ? `<span class="rel-why">${why}</span>` : ""}</span>${right}</li>`;
   const pxCell = (sym, price, chgPct) => price == null ? "" : `<span class="num" style="text-align:right;font-size:12.5px">${fmtPrice(price, sym)}<br><small class="${cls(chgPct)}">${fmtPct(chgPct)}</small></span>`;
+  function peersFromNews(ul, ni){
+    IDX = IDX || buildIndex();
+    $("#peersSub").textContent = "네이버 증권 업종 비교";
+    ul.innerHTML = ni.pe.map(([s, nm]) => { const e = IDX.find(x => x.sym === s), q = quoteOf(s); return relLI(s, e?.name || nm, pxCell(s, q?.price, q?.chgPct), "", !!e); }).join("");
+  }
   async function renderPeers(sym){
     const ul = $("#peers"); ul.innerHTML = `<li class="empty">불러오는 중…</li>`; $("#peersSub").textContent = "";
     if (isKRsym(sym)){
       await Promise.all([loadSectors(), loadKR()]);
       if (S.sel !== sym) return;
       const me = SECT?.m?.[sym];
-      if (!me || !KR.idx){ ul.innerHTML = `<li class="empty">업종 정보가 없는 종목이에요.</li>`; return; }
+      if (!me || !KR.idx){ const ni = await newsInfo(sym); if (S.sel !== sym) return; if (ni?.pe?.length){ peersFromNews(ul, ni); return; } ul.innerHTML = `<li class="empty">업종 정보가 없는 종목이에요.</li>`; return; }
       $("#peersSub").textContent = SECT.inds[me[0]];
       const peers = KR.idx.items.filter(i => i[0] !== sym && SECT.m[i[0]]?.[0] === me[0]).sort((a, b) => b[5] - a[5]).slice(0, 8);
       ul.innerHTML = `<li class="empty" style="text-align:left;padding:6px 0">주요 제품: ${esc(me[1] || "–")}</li>`
@@ -3758,7 +3814,7 @@ ${JSON.stringify(ctx)}
         + (peers.length ? `<li class="empty" style="text-align:left;padding:6px 0;font-size:11.5px">한국거래소 공식 업종 분류 · 시가총액 순 · 가격은 받은 현재가가 없으면 ${KR.idx.asOf.slice(5).replace("-", ".")} 종가</li>` : `<li class="empty">같은 업종 종목이 없어요.</li>`);
     } else {
       const g = US_SECTOR[sym];
-      if (!g){ ul.innerHTML = `<li class="empty">이 종목은 업종 분류가 아직 없어요. 연관 종목을 참고해 주세요.</li>`; return; }
+      if (!g){ const ni = await newsInfo(sym); if (S.sel !== sym) return; if (ni?.pe?.length){ peersFromNews(ul, ni); return; } ul.innerHTML = `<li class="empty">이 종목은 업종 분류 자료가 없어요.</li>`; return; }
       $("#peersSub").textContent = g;
       IDX = IDX || buildIndex();
       const peers = Object.keys(US_SECTOR).filter(s => s !== sym && US_SECTOR[s] === g);
@@ -3781,9 +3837,22 @@ ${JSON.stringify(ctx)}
         return relLI(e?.sym || t || "", e?.name || r.name || t, pxCell(e?.sym, q?.price, q?.chgPct), why, !!e);
       }).join("") + `<li class="empty" style="text-align:left;padding:6px 0;font-size:11.5px">AI가 공개된 정보를 바탕으로 추정한 관계예요. 최신 계약과 다를 수 있으니 공시로 확인하세요. <button type="button" class="icon-btn" id="relAgain" style="margin-left:4px">다시 찾기</button></li>`;
     };
+    $("#relSub").textContent = "공급·납품·고객 관계";
     if (hit && !force && Date.now() - hit.t < 7 * 864e5 && Array.isArray(hit.items)){ show(hit.items); return; }
     const canAI = !!(SAMPLE || (API.ai && (!API.aiCode || aiCode())));
-    if (!canAI){ ul.innerHTML = `<li class="empty">공급·납품 관계 같은 연관 종목은 AI가 찾아줘요. Claude 앱 안이나, AI 키를 넣은 서버에서 보여요.</li>`; return; }
+    if (!canAI){
+      ul.innerHTML = `<li class="empty">불러오는 중…</li>`;
+      const ni = await newsInfo(sym); if (S.sel !== sym) return;
+      IDX = IDX || buildIndex();
+      const peerSet = new Set((ni?.pe || []).map(p => p[0]));
+      const rc = (ni?.rc || []).filter(s => s !== sym && IDX.some(x => x.sym === s));
+      $("#relSub") && ($("#relSub").textContent = "함께 보는 종목");
+      ul.innerHTML = (ni?.ov ? `<li class="empty rel-ov"><b>회사 소개</b> ${esc(ni.ov)}</li>` : "")
+        + rc.map(s => { const e = IDX.find(x => x.sym === s), q = quoteOf(s); return relLI(s, e?.name || s, pxCell(s, q?.price, q?.chgPct), peerSet.has(s) ? "같은 업종" : "", !!e); }).join("")
+        + (rc.length ? `<li class="empty" style="text-align:left;padding:6px 0;font-size:11.5px">이 종목을 본 투자자들이 함께 많이 본 종목이에요(야후 파이낸스 기준). 공급·납품 관계는 AI가 있는 Claude 앱에서 따로 찾아줘요.</li>`
+          : `<li class="empty">함께 보는 종목 자료가 아직 없어요. 공급·납품 관계는 Claude 앱에서 AI가 찾아줘요.</li>`);
+      return;
+    }
     if (REL_BUSY[sym]) return;
     REL_BUSY[sym] = true;
     ul.innerHTML = `<li class="empty"><span class="spin" aria-hidden="true" style="display:inline-block;vertical-align:-2px"></span> 연관 종목을 찾는 중…</li>`;
