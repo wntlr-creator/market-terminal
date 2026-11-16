@@ -1,0 +1,40 @@
+name: 종목 뉴스·업종 갱신
+
+on:
+  schedule:
+    - cron: "20 22 * * *"   # 한국시간 07:20
+    - cron: "20 2 * * 1-5"  # 11:20
+    - cron: "50 6 * * 1-5"  # 15:50
+    - cron: "20 11 * * *"   # 20:20
+    - cron: "40 14 * * 1-5" # 23:40 (미국 장 시작 후)
+  push:
+    paths: ["build_news.py", ".github/workflows/news.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-news
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 뉴스 받기
+        run: python build_news.py
+      - name: 변경된 데이터 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/news data/naver_world_codes.json
+          git diff --cached --quiet && exit 0
+          git commit -m "news: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
+          for i in 1 2 3; do git pull --rebase && git push && exit 0; sleep 5; done
+          exit 1
