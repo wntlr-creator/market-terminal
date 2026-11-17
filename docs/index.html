@@ -1409,8 +1409,8 @@ const TA = (() => {
       const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
       return `${y}.${String(m).padStart(2, "0")}.${String(d).padStart(2, "0")} (${WD[w]})`; };
     const loc = { locale: "ko-KR", timeFormatter: dateLabel };
-    // 오늘 봉 오른쪽(미래)으로는 더 못 끌게 '벽'을 둠 — 끌고 난 뒤 되돌아가는 동작 없이, 과거 쪽으로는 자유롭게
-    const ts = { ...th.timeScale, rightOffset: 2, minBarSpacing: 1, shiftVisibleRangeOnNewBar: true, fixRightEdge: true };
+    // 오른쪽(미래)·왼쪽(과거) 모두 막지 않음 — 끌어 놓은 자리에 그대로
+    const ts = { ...th.timeScale, rightOffset: 2, minBarSpacing: 1, shiftVisibleRangeOnNewBar: true };
     // 날짜 축은 위 가격 차트 밑에 — 어디를 눌러도 그 날짜가 바로 아래 표시됨. 거래량 차트는 같은 시간축을 따라감
     chart = LightweightCharts.createChart($("#chart"), { autoSize: true, ...th, ...touch, timeScale: { ...ts, visible: true }, localization: loc });
     vchart = LightweightCharts.createChart($("#volchart"), { autoSize: true, ...th, ...touch, timeScale: { ...ts, visible: false }, localization: loc });
