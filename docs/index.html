@@ -1409,11 +1409,14 @@ const TA = (() => {
       const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
       return `${y}.${String(m).padStart(2, "0")}.${String(d).padStart(2, "0")} (${WD[w]})`; };
     const loc = { locale: "ko-KR", timeFormatter: dateLabel };
-    const ts = { ...th.timeScale, rightOffset: 3, minBarSpacing: 1, shiftVisibleRangeOnNewBar: true };
+    // 오늘 봉 오른쪽(미래)으로는 더 못 끌게 '벽'을 둠 — 끌고 난 뒤 되돌아가는 동작 없이, 과거 쪽으로는 자유롭게
+    const ts = { ...th.timeScale, rightOffset: 2, minBarSpacing: 1, shiftVisibleRangeOnNewBar: true, fixRightEdge: true };
     // 날짜 축은 위 가격 차트 밑에 — 어디를 눌러도 그 날짜가 바로 아래 표시됨. 거래량 차트는 같은 시간축을 따라감
     chart = LightweightCharts.createChart($("#chart"), { autoSize: true, ...th, ...touch, timeScale: { ...ts, visible: true }, localization: loc });
     vchart = LightweightCharts.createChart($("#volchart"), { autoSize: true, ...th, ...touch, timeScale: { ...ts, visible: false }, localization: loc });
     makeMain();
+    // 숨겨져 있다가(폭 0) 처음 보이게 될 때 한 번 화면 맞춤
+    try { new ResizeObserver(() => { if (!fitOK && $("#chart").clientWidth > 50 && lastBars.length){ fitOK = true; fitChart(); } }).observe($("#chart")); } catch {}
     const line = { lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
     MA_LIST.forEach(k => maS[k] = chart.addLineSeries(line));
     vol = vchart.addHistogramSeries({ priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
@@ -1421,20 +1424,12 @@ const TA = (() => {
     volMa = vchart.addLineSeries({ ...line, lineWidth: 1 });
     seriesColors();
     // 두 차트 시간축 동기화
-    // 끌어서 옮길 때 오늘 봉 오른쪽 빈 공간으로 너무 멀리 밀려나지 않게(최대 6칸) 붙잡아 둠
-    // 움직이는 도중엔 붙잡지 않고(뚝뚝 끊기는 느낌 방지), 손을 뗀 뒤 오른쪽 빈 공간이 너무 크면 부드럽게 되돌림
-    const MAX_FUTURE = 8;
+    // 사용자가 옮긴 자리는 그대로 둠 — 코드가 다시 끌어오지 않음
     const link = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => {
       if (syncing || !r) return;
       syncing = true; try { b.timeScale().setVisibleLogicalRange(r); } finally { syncing = false; }
     });
     link(chart, vchart); link(vchart, chart);
-    const settle = () => setTimeout(() => {
-      const r = chart.timeScale().getVisibleLogicalRange(), last = lastBars.length - 1;
-      if (!r || last < 1) return;
-      if (r.to > last + MAX_FUTURE){ const d = r.to - (last + 3); chart.timeScale().setVisibleLogicalRange({ from: r.from - d, to: r.to - d }); }
-      else if (r.from < -MAX_FUTURE){ const d = -3 - r.from; chart.timeScale().setVisibleLogicalRange({ from: r.from + d, to: r.to + d }); }
-    }, 30);
     // 휴대폰: 차트를 톡 누르면 그 날짜에 십자선을 세우고 날짜·시고저종을 보여줌 (원래는 길게 눌러야 나옴)
     [[chart, "#chart"], [vchart, "#volchart"]].forEach(([c, id]) => {
       const el = $(id); let st = null;
@@ -1453,7 +1448,6 @@ const TA = (() => {
         }, 40);
       }, { passive: true });
     });
-    ["#chart", "#volchart"].forEach(id => { const el = $(id); ["pointerup", "touchend", "mouseup"].forEach(ev => el.addEventListener(ev, settle, { passive: true })); el.addEventListener("wheel", () => { clearTimeout(el._wt); el._wt = setTimeout(settle, 250); }, { passive: true }); });
     const idxOf = t => lastBars.findIndex(x => x.time === t);
     // 한쪽 차트에서 움직이면 다른 쪽엔 같은 날짜만 맞춰 표시. 코드로 옮긴 십자선 이벤트(사람이 움직인 게 아님)는 무시해서
     // 서로 값을 덮어쓰며 '달라붙는' 현상이 생기지 않게 함
@@ -1574,6 +1568,7 @@ const TA = (() => {
     return `<span class="t">${esc(nameOf(S.sel))}</span><span class="s num">${esc(S.sel)}</span>${earnChip(S.sel)}
       <span class="p num">${fmtPrice(q.price, S.sel, q.unit)} <small class="${cls(q.chgPct)}" style="font-size:13px">${fmtChg(q.chg, S.sel)} ${fmtPct(q.chgPct)}</small></span>`;
   }
+  let fitSym = null, fitOK = false;
   function renderChart(){
     const symbols = Object.keys(DATA.candles);
     if (!symbols.length){ $("#chartHead").innerHTML = `<p class="empty">차트 데이터가 없어요.</p>`; return; }
@@ -1597,7 +1592,9 @@ const TA = (() => {
     vol.setData(lastRaw.map((r, i) => ({ time: r[0], value: r[5] || 0, color: (i ? r[4] < lastRaw[i - 1][4] : r[4] < r[1]) ? dn : up })));
     const vm = TA.sma(lastRaw.map(r => r[5] || 0), 20);
     volMa.setData(lastRaw.map((r, i) => vm[i] == null ? null : { time: r[0], value: vm[i] }).filter(Boolean));
-    fitChart();
+    // 화면 맞춤은 종목을 바꿨을 때만. 10분마다 시세가 갱신돼도 사용자가 옮겨 둔 위치·확대는 그대로
+    // (차트가 숨겨진 채 맞추면 폭이 0이라 엉뚱하게 맞춰지므로, 그땐 보일 때 다시 맞춤)
+    if (fitSym !== S.sel || !fitOK){ fitSym = S.sel; fitOK = ($("#chart")?.clientWidth || 0) > 50; fitChart(); }
     const i = lastBars.length - 1;
     $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i); fitTopMargin();
     drawPatterns(TA_STATE.sym === S.sel ? TA_STATE.an : null);
@@ -2289,7 +2286,7 @@ ${JSON.stringify(need)}`;
     lastRaw = DATA.candles[S.sel];
     lastBars = lastRaw.map(r => ({ time: r[0], open: r[1], high: r[2], low: r[3], close: r[4] }));
     setMainData();
-    if (atEnd) fitChart();
+    void atEnd;
     MA_LIST.forEach(k => maS[k]?.setData(S.ma[k] ? maData(k) : []));
     const up = alpha(css("--up"), 0.55), dn = alpha(css("--down"), 0.55);
     vol.setData(lastRaw.map((r, i) => ({ time: r[0], value: r[5] || 0, color: (i ? r[4] < lastRaw[i - 1][4] : r[4] < r[1]) ? dn : up })));
@@ -3943,7 +3940,7 @@ JSON 하나로만 답해: {"related":[{"name":"회사명(한국어)","ticker":""
   $("#related").addEventListener("click", e => { if (e.target.id === "relAgain"){ e.stopPropagation(); renderRelated(S.sel, true); } });
 
   // 테마 변경 시 차트 색 다시 적용
-  const retheme = () => { if (chart){ const th = chartTheme(); chart.applyOptions({ ...th, timeScale: { ...th.timeScale, visible: false } }); vchart.applyOptions(th); seriesColors(); if (DATA) renderChart(); } };
+  const retheme = () => { if (chart){ const th = chartTheme(); chart.applyOptions({ ...th, timeScale: { ...th.timeScale, visible: true } }); vchart.applyOptions({ ...th, timeScale: { ...th.timeScale, visible: false } }); seriesColors(); if (DATA) renderChart(); } };
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", retheme);
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
