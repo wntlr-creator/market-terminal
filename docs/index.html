@@ -174,7 +174,7 @@ select{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;
 .tog{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:none}
 .tog i{width:12px;height:2px;border-radius:1px}
 .tog[aria-pressed="false"]{opacity:.45}
-#chart{height:330px;width:100%;position:relative}
+#chart{height:356px;width:100%;position:relative}
 .vol-wrap{position:relative;border-top:1px solid var(--line-2)}
 #volchart{height:120px;width:100%}
 .vol-label{position:absolute;left:10px;top:4px;z-index:3;font-size:11px;color:var(--muted);pointer-events:none;display:flex;gap:10px}
@@ -281,7 +281,7 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
   .card .px{font-size:16px}
   .card svg{display:none}
   .col-hide{display:none}
-  #chart{height:270px}
+  #chart{height:296px}
   #volchart{height:96px}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .stats div:nth-child(3){border-left:0}
@@ -436,11 +436,16 @@ footer{color:var(--dim);font-size:11.5px;line-height:1.6}
 .pk-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pk-foot{margin-top:12px;display:grid;gap:6px;justify-items:start}
 /* 차트 크게 보기 */
+.lg-date{color:var(--fg);font-weight:700}
+.zoom-grp{display:inline-flex;gap:0}
+.chart-tools .zoom-grp .zb{min-width:36px;font-size:17px;font-weight:700;line-height:1;padding:4px 0 6px;border-radius:0;opacity:1;justify-content:center}
+.chart-tools .zoom-grp .zb:first-child{border-radius:6px 0 0 6px}.chart-tools .zoom-grp .zb:last-child{border-radius:0 6px 6px 0}
+.zoom-grp .zb+.zb{margin-left:-1px}
 #fsBtn{opacity:1}
 html.fs-lock,html.fs-lock body{overflow:hidden}
 .chart-panel.fs{position:fixed;inset:0;z-index:80;margin:0;border-radius:0;overflow-y:auto;background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
 .chart-panel.fs #chart{height:calc(100dvh - 330px);min-height:300px}
-.chart-panel.fs #volchart{height:80px}
+.chart-panel.fs #volchart{height:96px}
 .chart-panel.fs .stats{display:none}
 .chart-panel.fs .ph #taBtn{display:none}
 .fs-pats{padding:10px 14px 14px;border-top:1px solid var(--line-2);display:grid;gap:10px}
@@ -786,6 +791,12 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
           <button type="button" data-r="6M" aria-pressed="true">6M</button>
           <button type="button" data-r="1Y" aria-pressed="false">1Y</button>
         </div>
+        <span class="zoom-grp" role="group" aria-label="차트 확대·이동">
+          <button type="button" class="tog zb" data-zoom="1.5" title="축소(더 긴 기간)" aria-label="축소">−</button>
+          <button type="button" class="tog zb" data-zoom="0.66" title="확대(더 짧은 기간)" aria-label="확대">+</button>
+          <button type="button" class="tog zb" data-pan="-1" title="이전 기간으로" aria-label="왼쪽으로">‹</button>
+          <button type="button" class="tog zb" data-pan="1" title="최근 쪽으로" aria-label="오른쪽으로">›</button>
+        </span>
         <button type="button" class="tog fit-btn" id="fitBtn" title="차트를 다시 화면에 맞추기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>맞춤</button>
         <button type="button" class="tog fit-btn" id="fsBtn" title="차트만 크게 보기" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4M2 2l4 4M14 2l-4 4M2 14l4-4M14 14l-4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>크게</span></button>
         <div class="seg" id="typeSeg" aria-label="차트 종류">
@@ -1341,7 +1352,8 @@ const TA = (() => {
       timeScale: { borderColor: css("--line") },
       // 십자선: 종가에 달라붙지 않고(Normal) 손가락·마우스를 그대로 따라감, 얇은 실선
       crosshair: { mode: 0, vertLine: { color: alpha(css("--muted"), 0.55), width: 1, style: 0, labelBackgroundColor: css("--panel-2") }, horzLine: { color: alpha(css("--muted"), 0.55), width: 1, style: 0, labelBackgroundColor: css("--panel-2") } },
-      kineticScroll: { touch: true, mouse: false }
+      // 손을 떼면 미끄러지듯 계속 움직이던 관성 스크롤은 끔 — 손가락을 뗀 자리에서 바로 멈춤
+      kineticScroll: { touch: false, mouse: false }
     };
   }
   function mainColors(){
@@ -1370,12 +1382,13 @@ const TA = (() => {
     MA_LIST.forEach(k => maS[k]?.applyOptions({ color: css("--ma" + k) }));
     volMa?.applyOptions({ color: css("--ma20") });
   }
+  const fmtDay = t => { const [y, m, d] = String(t).split("-").map(Number); if (!d) return String(t); return `${y}.${String(m).padStart(2, "0")}.${String(d).padStart(2, "0")} (${"일월화수목금토"[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]})`; };
   function legendHTML(bar, i){
     const s = S.sel, mas = MA_LIST.filter(k => S.ma[k]).map(k => {
       const v = TA.sma(lastBars.map(x => x.close), k)[i];
       return v == null ? "" : `<span class="ma" style="color:var(--ma${k})">MA${k} ${fmtPrice(v, s)}</span>`;
     }).join("");
-    return `<span>${esc(bar.time)}</span><span>시 ${fmtPrice(bar.open, s)}</span><span>고 ${fmtPrice(bar.high, s)}</span><span>저 ${fmtPrice(bar.low, s)}</span><span>종 ${fmtPrice(bar.close, s)}</span>${mas}`;
+    return `<b class="lg-date">${esc(fmtDay(bar.time))}</b><span>시 ${fmtPrice(bar.open, s)}</span><span>고 ${fmtPrice(bar.high, s)}</span><span>저 ${fmtPrice(bar.low, s)}</span><span>종 ${fmtPrice(bar.close, s)}</span>${mas}`;
   }
   function volLegendHTML(i){
     const r = lastRaw[i]; if (!r) return "";
@@ -1385,10 +1398,21 @@ const TA = (() => {
   function initChart(){
     if (chart || !window.LightweightCharts) return;
     const th = chartTheme();
-    const touch = { handleScroll: { vertTouchDrag: false, horzTouchDrag: true, mouseWheel: true, pressedMouseMove: true } };
-    chart = LightweightCharts.createChart($("#chart"), { autoSize: true, ...th, ...touch, timeScale: { ...th.timeScale, visible: false, rightOffset: 4 }, localization: { locale: "ko-KR" } });
-    vchart = LightweightCharts.createChart($("#volchart"), { autoSize: true, ...th, ...touch, timeScale: { ...th.timeScale, rightOffset: 4 }, localization: { locale: "ko-KR" },
-      handleScale: { axisPressedMouseMove: { price: false } } });
+    const touch = { handleScroll: { vertTouchDrag: false, horzTouchDrag: true, mouseWheel: true, pressedMouseMove: true },
+      handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: { time: true, price: true }, axisDoubleClickReset: { time: true, price: true } } };
+    // 십자선 아래 날짜: 2026.11.13 (금)
+    const WD = "일월화수목금토";
+    const dateLabel = t => { let y, m, d;
+      if (typeof t === "string"){ [y, m, d] = t.split("-").map(Number); }
+      else if (typeof t === "object" && t){ ({ year: y, month: m, day: d } = t); }
+      else { const dt = new Date(t * 1000); y = dt.getUTCFullYear(); m = dt.getUTCMonth() + 1; d = dt.getUTCDate(); }
+      const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+      return `${y}.${String(m).padStart(2, "0")}.${String(d).padStart(2, "0")} (${WD[w]})`; };
+    const loc = { locale: "ko-KR", timeFormatter: dateLabel };
+    const ts = { ...th.timeScale, rightOffset: 3, minBarSpacing: 1, shiftVisibleRangeOnNewBar: true };
+    // 날짜 축은 위 가격 차트 밑에 — 어디를 눌러도 그 날짜가 바로 아래 표시됨. 거래량 차트는 같은 시간축을 따라감
+    chart = LightweightCharts.createChart($("#chart"), { autoSize: true, ...th, ...touch, timeScale: { ...ts, visible: true }, localization: loc });
+    vchart = LightweightCharts.createChart($("#volchart"), { autoSize: true, ...th, ...touch, timeScale: { ...ts, visible: false }, localization: loc });
     makeMain();
     const line = { lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
     MA_LIST.forEach(k => maS[k] = chart.addLineSeries(line));
@@ -1398,15 +1422,38 @@ const TA = (() => {
     seriesColors();
     // 두 차트 시간축 동기화
     // 끌어서 옮길 때 오늘 봉 오른쪽 빈 공간으로 너무 멀리 밀려나지 않게(최대 6칸) 붙잡아 둠
-    const MAX_FUTURE = 6;
+    // 움직이는 도중엔 붙잡지 않고(뚝뚝 끊기는 느낌 방지), 손을 뗀 뒤 오른쪽 빈 공간이 너무 크면 부드럽게 되돌림
+    const MAX_FUTURE = 8;
     const link = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => {
       if (syncing || !r) return;
-      syncing = true;
-      const last = lastBars.length - 1;
-      if (last > 0 && r.to > last + MAX_FUTURE){ const d = r.to - (last + MAX_FUTURE); r = { from: r.from - d, to: r.to - d }; a.timeScale().setVisibleLogicalRange(r); }
-      b.timeScale().setVisibleLogicalRange(r); syncing = false;
+      syncing = true; try { b.timeScale().setVisibleLogicalRange(r); } finally { syncing = false; }
     });
     link(chart, vchart); link(vchart, chart);
+    const settle = () => setTimeout(() => {
+      const r = chart.timeScale().getVisibleLogicalRange(), last = lastBars.length - 1;
+      if (!r || last < 1) return;
+      if (r.to > last + MAX_FUTURE){ const d = r.to - (last + 3); chart.timeScale().setVisibleLogicalRange({ from: r.from - d, to: r.to - d }); }
+      else if (r.from < -MAX_FUTURE){ const d = -3 - r.from; chart.timeScale().setVisibleLogicalRange({ from: r.from + d, to: r.to + d }); }
+    }, 30);
+    // 휴대폰: 차트를 톡 누르면 그 날짜에 십자선을 세우고 날짜·시고저종을 보여줌 (원래는 길게 눌러야 나옴)
+    [[chart, "#chart"], [vchart, "#volchart"]].forEach(([c, id]) => {
+      const el = $(id); let st = null;
+      el.addEventListener("pointerdown", e => { st = e.pointerType === "mouse" ? null : { x: e.clientX, y: e.clientY, t: Date.now() }; }, { passive: true });
+      el.addEventListener("pointerup", e => {
+        if (!st || Math.hypot(e.clientX - st.x, e.clientY - st.y) > 8 || Date.now() - st.t > 500) return;
+        const rc = el.getBoundingClientRect(), lg = c.timeScale().coordinateToLogical(e.clientX - rc.left);
+        if (lg == null || !lastBars.length) return;
+        const i = Math.max(0, Math.min(lastBars.length - 1, Math.round(lg)));
+        // 차트가 손을 뗄 때 십자선을 지우므로 그 직후에 세움
+        setTimeout(() => {
+          xSync = true;
+          try { chart.setCrosshairPosition(lastBars[i].close, lastBars[i].time, main); vchart.setCrosshairPosition(lastRaw[i]?.[5] || 0, lastBars[i].time, vol); } catch {}
+          finally { xSync = false; }
+          $("#legend").innerHTML = legendHTML(lastBars[i], i); $("#volLegend").innerHTML = volLegendHTML(i);
+        }, 40);
+      }, { passive: true });
+    });
+    ["#chart", "#volchart"].forEach(id => { const el = $(id); ["pointerup", "touchend", "mouseup"].forEach(ev => el.addEventListener(ev, settle, { passive: true })); el.addEventListener("wheel", () => { clearTimeout(el._wt); el._wt = setTimeout(settle, 250); }, { passive: true }); });
     const idxOf = t => lastBars.findIndex(x => x.time === t);
     // 한쪽 차트에서 움직이면 다른 쪽엔 같은 날짜만 맞춰 표시. 코드로 옮긴 십자선 이벤트(사람이 움직인 게 아님)는 무시해서
     // 서로 값을 덮어쓰며 '달라붙는' 현상이 생기지 않게 함
@@ -1431,6 +1478,20 @@ const TA = (() => {
     if (!chart) return;
     try { chart.priceScale("right").applyOptions({ autoScale: true }); vchart.priceScale("right").applyOptions({ autoScale: true }); } catch {}
     applyRange();
+  }
+  // 버튼으로 확대·축소(오른쪽 끝 기준)와 좌우 이동
+  function zoomChart(f){
+    if (!chart || !lastBars.length) return;
+    const r = chart.timeScale().getVisibleLogicalRange(); if (!r) return;
+    const last = lastBars.length - 1, to = Math.min(r.to, last + 3), w = Math.min(Math.max((r.to - r.from) * f, 12), lastBars.length + 10);
+    chart.timeScale().setVisibleLogicalRange({ from: to - w, to });
+  }
+  function panChart(dir){
+    if (!chart || !lastBars.length) return;
+    const r = chart.timeScale().getVisibleLogicalRange(); if (!r) return;
+    const last = lastBars.length - 1, w = r.to - r.from;
+    let to = r.to + dir * w * 0.4; to = Math.min(to, last + 3); to = Math.max(to, w - 3);
+    chart.timeScale().setVisibleLogicalRange({ from: to - w, to });
   }
   function applyRange(){
     if (!chart || !lastBars.length) return;
@@ -3286,6 +3347,7 @@ ${JSON.stringify(data)}`;
   $("#watchBody").addEventListener("keydown", e => { const tr = e.target.closest("tr[data-sym]"); if (tr && e.target === tr && e.key === "Enter") openStockPage(tr.dataset.sym); });
   $("#symSel").addEventListener("change", e => select(e.target.value));
   $("#fitBtn").addEventListener("click", fitChart);
+  document.querySelectorAll(".zoom-grp .zb").forEach(b => b.addEventListener("click", () => b.dataset.zoom ? zoomChart(+b.dataset.zoom) : panChart(+b.dataset.pan)));
   $("#rangeSeg").addEventListener("click", e => {
     const b = e.target.closest("[data-r]"); if (!b) return; S.range = b.dataset.r;
     $("#rangeSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); applyRange();
