@@ -14,6 +14,8 @@ const log = (...a) => console.error("[picks]", ...a);
 const html = fs.readFileSync(D("index.html"), "utf8");
 const a0 = html.indexOf("const TA = (() => {"), a1 = html.indexOf("\n})();", a0);
 const TA = new Function("return " + html.slice(a0 + "const TA = ".length, a1 + 5))();
+const h0 = html.indexOf("const HORIZON = (() => {"), h1 = html.indexOf("\n})();", h0);
+const HORIZON = new Function("return " + html.slice(h0 + "const HORIZON = ".length, h1 + 5))();
 const rule = name => { const m = html.match(new RegExp(`const ${name} = (\\[[\\s\\S]*?\\]\\]);`)); return new Function("return " + m[1])(); };
 const GOOD = rule("GOOD_RULES"), BAD = rule("BAD_RULES");
 function tone(t){
@@ -99,6 +101,9 @@ for (const r of rows){
   r.pos52 = a.high52 > a.low52 ? Math.round((close - a.low52) / (a.high52 - a.low52) * 100) : 50;
   r.trendUp = a.ma[60] != null && a.ma[120] != null && close > a.ma[120] && a.ma[60] > a.ma[120];
   r.pre = r.etf ? r.T : Math.round(0.6 * r.T + 0.4 * r.V);
+  const base = r.perBase ?? (r.mkt === "KR" ? krMed : r.mkt === "US" ? usMed : null);
+  r.hz = HORIZON.rate(a, r.etf ? null : { ...r.f, base });
+  r.H = Object.fromEntries(r.hz.list.map(h => [h.key, h.score]));
 }
 
 // ---- 성향별 후보 (각 시장 10개)
@@ -108,6 +113,9 @@ const PRESETS = {
   value: { name: "저평가 + 상승 추세", test: r => !r.etf && r.V >= 62 && r.T >= 55, key: r => r.V + r.T },
   dip: { name: "눌림목", test: r => r.trendUp && r.an.rsi >= 33 && r.an.rsi <= 50 && r.an.chg20 <= 0 && r.an.chg20 >= -15, key: r => r.pre },
   momentum: { name: "모멘텀", test: r => r.T >= 65 && r.an.rsi < 75 && r.an.chg60 > 0, key: r => r.an.chg60 },
+  short: { name: "단타 (며칠~2주)", test: r => r.H.short >= 62 && !(r.mkt === "KR" && r.amount < 5e9), key: r => r.H.short * 2 + r.T * 0.2 },
+  swing: { name: "스윙 (2~8주)", test: r => r.H.swing >= 62, key: r => r.H.swing * 2 + r.T * 0.2 },
+  long: { name: "장기 (6개월+)", test: r => r.H.long >= 62 && !r.lev && (r.etf || !r.hz.list[2].noFund), key: r => r.H.long * 2 + (r.V ?? 50) * 0.2 },
 };
 const picks = {};
 const need = new Set();
@@ -164,12 +172,13 @@ function finalize(r){
   return { sym: r.sym, name: r.name, mkt: r.mkt, price: a.close, chgPct: QS[r.sym]?.[2] ?? null, score: r.score, T: r.T, V: r.V, N: r.N, signal: a.signal,
     per: r.f?.per ?? null, perBase: r.perBase ?? null, roe: r.f?.roe ?? null, rsi: a.rsi, chg20: a.chg20, chg60: a.chg60, pos52: r.pos52,
     why, risk, stop: L.mode === "bull" ? L.stop : null, target: L.mode === "bull" ? L.target1 : null, stopTxt: L.mode === "bull" && L.stop ? fmt(L.stop, kr) : null,
-    news: ns.slice(0, 4).map(n => ({ t: n.title, l: n.link, s: n.src, d: n.time.slice(0, 10), tone: n.tone, why: n.why })), asOf: a.asOf };
+    news: ns.slice(0, 4).map(n => ({ t: n.title, l: n.link, s: n.src, d: n.time.slice(0, 10), tone: n.tone, why: n.why })), asOf: a.asOf,
+    hz: r.hz.list.map(h => ({ k: h.key, ko: h.ko, s: h.score, g: h.good.slice(0, 3), b: h.bad.slice(0, 2) })), hzBest: r.hz.best?.key || null };
 }
 const out = { updated: new Date().toISOString(), method: "기술 50% + 가치 30% + 뉴스 20% (ETF는 기술 75% + 뉴스 25%)", presets: {} };
 for (const [pk, P] of Object.entries(PRESETS)){
   out.presets[pk] = { name: P.name };
-  for (const gk of Object.keys(groups)) out.presets[pk][gk] = picks[pk][gk].map(finalize).sort((x, y) => (pk === "momentum" ? y.chg60 - x.chg60 : y.score - x.score)).slice(0, 10);
+  for (const gk of Object.keys(groups)) out.presets[pk][gk] = picks[pk][gk].map(finalize).sort((x, y) => (pk === "momentum" ? y.chg60 - x.chg60 : PRESETS[pk].key && ["short", "swing", "long"].includes(pk) ? y.hz.find(h => h.k === pk).s - x.hz.find(h => h.k === pk).s || y.score - x.score : y.score - x.score)).slice(0, 10);
 }
 out.stats = { analyzed: rows.length, kr: rows.filter(r => r.mkt === "KR").length, us: rows.filter(r => r.mkt === "US").length, etf: rows.filter(r => r.etf).length, krMedPer: krMed, usMedPer: usMed };
 fs.writeFileSync(D("picks.json"), JSON.stringify(out));
