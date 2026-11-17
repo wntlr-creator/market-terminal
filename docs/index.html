@@ -677,6 +677,68 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .pf-table td:nth-child(2) small{max-width:150px}
   .pf-table td,.pf-table th{padding-inline:6px}
 }
+/* ===== AI 투자위원회 ===== */
+.ic-top{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr) minmax(0,1.1fr);border-bottom:1px solid var(--line-2)}
+.ic-top>section{padding:14px;min-width:0}
+.ic-top>section+section{border-left:1px solid var(--line-2)}
+.ic-fin-row{display:flex;gap:14px;align-items:center}
+.ic-fin-row p{margin:4px 0 0;font-size:13px;line-height:1.55}
+.ic-stance{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.ic-stance.up{color:var(--up)} .ic-stance.down{color:var(--down)}
+.ic-donut{width:96px;height:96px;flex:none}
+.ic-donut .d-bg{fill:none;stroke:var(--accent);stroke-width:11;opacity:.9}
+.ic-donut .d-st{fill:none;stroke:var(--up);stroke-width:11}
+.ic-donut .d-v{font-family:var(--font-num);font-size:17px;font-weight:700;fill:var(--fg)}
+.ic-donut .d-l{font-size:10px;fill:var(--muted)}
+.ic-vote{display:flex;gap:6px;flex-wrap:wrap}
+.ic-sig{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.ic-sig.up{background:var(--up-bg);color:var(--up);border-color:transparent} .ic-sig.down{background:var(--down-bg);color:var(--down);border-color:transparent}
+.ic-steps{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-family:var(--font-num);font-size:12px}
+.ic-steps li{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px;background:var(--panel-2);color:var(--dim)}
+.ic-steps li span{font-family:var(--font-ui)}
+.ic-steps li em{font-style:normal}
+.ic-steps li.done{color:var(--fg)} .ic-steps li.done em{color:#2fbf71}
+.ic-steps li.run{color:var(--fg);box-shadow:inset 0 0 0 1px var(--accent)} .ic-steps li.run em{color:var(--accent)}
+.ic-team{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.ic-team li{display:grid;grid-template-columns:1fr auto;gap:1px 8px;font-size:12.5px;padding-bottom:6px;border-bottom:1px dashed var(--line-2)}
+.ic-team li:last-child{border-bottom:0}
+.ic-team li b{font-size:15px}
+.ic-team li small{grid-column:1/-1;color:var(--muted);font-size:11.5px;line-height:1.45}
+.ic-cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.ic-card{border:1px solid var(--line);border-top:3px solid var(--dim);border-radius:10px;background:var(--panel-2);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ic-card.c-up{border-top-color:var(--up)} .ic-card.c-down{border-top-color:var(--down)}
+.ic-card header{display:flex;gap:8px;align-items:center}
+.ic-card header div{flex:1;min-width:0} .ic-card header b{display:block;font-size:14px} .ic-card header small{color:var(--muted);font-size:11px}
+.ic-conf{display:grid;grid-template-columns:auto 1fr auto;gap:7px;align-items:center;font-size:11.5px;color:var(--muted)}
+.ic-conf>i{height:6px;border-radius:3px;background:var(--line);overflow:hidden;display:block} .ic-conf>i>i{display:block;height:100%;background:var(--accent)}
+.ic-conf b{color:var(--fg);font-size:12.5px}
+.ic-quote{margin:0;font-size:13.5px;font-weight:600;line-height:1.5;word-break:keep-all}
+.ic-quote.muted{font-weight:400;font-size:12.5px}
+.ic-why{margin:0;font-size:12.5px;line-height:1.55;color:var(--muted)}
+.ic-rs{margin:0;padding-left:16px;font-size:12px;line-height:1.55;color:var(--muted)}
+.ic-src{margin-top:auto;font-size:10.5px;color:var(--dim)}
+.ic-debate{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ic-debate section{border-radius:8px;padding:12px;background:var(--panel-2);border-left:3px solid var(--line)}
+.ic-debate .bull{border-left-color:var(--up)} .ic-debate .bear{border-left-color:var(--down)}
+.ic-debate h4,.ic-trader h4{margin:0 0 5px;font-size:12.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.ic-debate p{margin:0;font-size:13px;line-height:1.65}
+.ic-verdict{margin:10px 0 0;font-size:13px;line-height:1.6}
+.ic-trader{margin-top:14px}
+.ic-risk{margin:12px 0 0;font-size:13px;line-height:1.6;color:var(--muted)} .ic-risk b{color:var(--fg);margin-right:6px}
+@media (max-width:1080px){.ic-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.ic-top{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ic-top>section:first-child{grid-column:1/-1}.ic-top>section:nth-child(2){border-left:0}.ic-top>section:nth-child(n+2){border-top:1px solid var(--line-2)}}
+@media (max-width:680px){.ic-cards{grid-template-columns:minmax(0,1fr)}.ic-top{grid-template-columns:minmax(0,1fr)}.ic-top>section+section{border-left:0}.ic-debate{grid-template-columns:minmax(0,1fr)}}
+
+.an-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:-6px}
+.an-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px 8px;font-size:14px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:7px}
+.an-tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.an-new{font-size:10.5px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 6px}
+.ic-mini .ic-mrows{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ic-mrows li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 8px;align-items:center;font-size:13px}
+.ic-mrows .mono{width:28px;height:28px;font-size:11px;grid-row:1/3}
+.ic-mrows small{grid-column:2/-1;color:var(--muted);font-size:11.5px}
+.ic-mfoot{margin:0;display:flex;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.ic-mini .ta-btn{justify-self:start}
+.ic-link{display:flex}
 </style>
 </head>
 <body>
@@ -834,7 +896,9 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
     </section>
   </div>
 
+  <div class="an-tabs stock-only" id="anTabs" role="tablist" aria-label="분석 화면" hidden><button type="button" role="tab" data-at="ta" aria-selected="true">차트 분석</button><button type="button" role="tab" data-at="ic" aria-selected="false">투자위원회 <span class="an-new">대가 5인·토론</span></button></div>
   <section class="panel ta-panel stock-only" id="taPanel" hidden aria-label="기술적 분석"></section>
+  <section class="panel ta-panel ic-panel stock-only" id="icPanel" hidden aria-label="AI 투자위원회" aria-live="polite"></section>
 
   <div class="tri">
     <section class="panel home-only" aria-labelledby="h-sec">
@@ -1681,6 +1745,7 @@ const HORIZON = (() => {
     if (typeof LIVE !== "undefined" && LIVE.mode === "browser" && LIVE.auto && !LIVE.busy && LIVE.state !== "needs"){
       LIVE.busy = true; fetchBars(sym).then(async got => { if (got !== false) await blankPane(); if (LIVE.bars[sym] && LIVE.lastQs) saveQuotes(LIVE.lastQs, false); }).finally(() => { LIVE.busy = false; }); }
     if (TA_STATE.sym && TA_STATE.sym !== sym) hideTA();
+    if (typeof IC !== "undefined" && IC && IC.sym && IC.sym !== sym) hideIC();
     if (S.mode === "stock"){ $("#stockBarT").textContent = `${nameOf(sym)} · ${sym}`; renderPeers(sym); renderRelated(sym); renderETF(sym); }
   }
 
@@ -2847,12 +2912,12 @@ ${JSON.stringify(need)}`;
     if (!an){ return; }
     TA_STATE.ctl?.abort();
     Object.assign(TA_STATE, { sym: S.sel, an, ai: null, aiErr: null, busy: false, pi: 0 });
-    $("#taPanel").hidden = false; $("#patTog").hidden = false;
+    $("#taPanel").hidden = false; $("#patTog").hidden = false; anTab("ta");
     drawPatterns(an); renderTA(); renderFsPats();
-    $("#taPanel").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    $("#anTabs").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
     if (SAMPLE || (API.ai && (!API.aiCode || aiCode()))) askAI();
   }
-  function hideTA(){ TA_STATE.ctl?.abort(); Object.assign(TA_STATE, { sym: null, an: null, ai: null, busy: false, pi: 0 }); $("#taPanel").hidden = true; $("#patTog").hidden = true; clearOverlay(); renderFsPats(); }
+  function hideTA(){ TA_STATE.ctl?.abort(); Object.assign(TA_STATE, { sym: null, an: null, ai: null, busy: false, pi: 0 }); $("#taPanel").hidden = true; $("#patTog").hidden = true; clearOverlay(); renderFsPats(); hideIC(); $("#anTabs").hidden = true; }
   /* 차트만 크게 보기: 화면 전체를 차트로, 아래에 가능성 있는 패턴 목록(눌러서 차트에 표시) */
   function renderFsPats(){
     const box = $("#fsPats"); if (!box) return;
@@ -3025,6 +3090,314 @@ ${JSON.stringify(data)}`;
   }
 
   $("#taBtn").addEventListener("click", runTA);
+  /* ===== AI 투자위원회 (ai-hedge-fund + TradingAgents 방식 실험) =====
+     1) 분석가 팀(기술·뉴스심리·재무·수급)이 데이터를 정리
+     2) 투자 대가 5인이 각자 기준으로 사자/중립/팔자 + 확신도
+     3) 강세 vs 약세 토론 → 트레이더 제안 → 리스크 검토 → 포트폴리오 매니저 최종 결론
+     AI가 없으면 1)·2)·최종 비중은 규칙 기반 계산으로 보여줌 */
+  var IC = { sym: null, busy: false, ctl: null, base: null, ai: null, err: null, step: 0, t0: 0, timer: null };
+  var IC_FUND = null;
+  const IC_PEOPLE = [
+    { id: "buffett", ko: "워런 버핏", mono: "WB", style: "가치·품질", desc: "좋은 회사를 적당한 가격에" },
+    { id: "munger", ko: "찰리 멍거", mono: "CM", style: "품질·해자", desc: "훌륭한 사업이면 기다린다" },
+    { id: "graham", ko: "벤 그레이엄", mono: "BG", style: "안전마진", desc: "싸지 않으면 사지 않는다" },
+    { id: "lynch", ko: "피터 린치", mono: "PL", style: "성장 대비 가격(PEG)", desc: "성장에 비해 싼 회사" },
+    { id: "druck", ko: "스탠리 드러켄밀러", mono: "SD", style: "추세·모멘텀", desc: "흐름이 맞을 때 크게" },
+  ];
+  const IC_STEPS = ["분석가 팀 (기술·뉴스·재무·수급)", "투자 대가 5인 의견", "강세 vs 약세 토론", "트레이더 거래 제안", "리스크 관리 검토", "포트폴리오 매니저 결론"];
+
+  function icFund(){
+    if (!IC_FUND) IC_FUND = fetchD("fund.json").then(r => r.ok ? r.json() : null).catch(() => null);
+    return IC_FUND;
+  }
+  const icSigCls = s => /사자|매수|늘리/.test(s || "") ? "up" : /팔자|매도|줄이|현금/.test(s || "") ? "down" : "flat";
+  const icClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const icNum = v => typeof v === "number" && isFinite(v);
+
+  /* 대가별 규칙 기반 판정 */
+  function icPersona(id, f, an, held){
+    const pts = [], add = (p, why) => pts.push([p, why]);
+    const per = f?.per, fper = f?.fper, pbr = f?.pbr, div = f?.div;
+    const roe = icNum(f?.roe) ? f.roe : icNum(per) && icNum(pbr) && per > 0 ? +(pbr / per * 100).toFixed(1) : null;
+    const growth = icNum(per) && icNum(fper) && per > 0 && fper > 0 ? (per / fper - 1) * 100 : null;
+    const above120 = an.ma[120] != null ? an.close > an.ma[120] : null;
+    const pos52 = an.high52 > an.low52 ? (an.close - an.low52) / (an.high52 - an.low52) : 0.5;
+    const noFund = !f || (!icNum(per) && !icNum(pbr));
+    if (id === "buffett"){
+      if (noFund) add(0, "재무 데이터가 없어 판단 보류");
+      else {
+        if (roe != null) roe >= 15 ? add(2, `ROE ${roe}%로 수익성 우수`) : roe >= 10 ? add(1, `ROE ${roe}% 양호`) : roe < 5 ? add(-1, `ROE ${roe}%로 낮음`) : add(0, `ROE ${roe}% 보통`);
+        if (icNum(per)) per <= 0 ? add(-2, "적자(PER 음수)") : per <= 20 ? add(1, `PER ${per.toFixed(1)}배로 부담 적음`) : per > 35 ? add(-1, `PER ${per.toFixed(1)}배로 비쌈`) : add(0, `PER ${per.toFixed(1)}배`);
+      }
+      if (above120 != null) above120 ? add(1, "장기(120일) 추세 위") : add(-1, "장기(120일) 추세 아래");
+      if (held) add(1, "실제 버크셔 13F에 보유 중");
+    } else if (id === "munger"){
+      if (noFund) add(0, "재무 데이터가 없어 판단 보류");
+      else {
+        if (roe != null) roe >= 20 ? add(2, `ROE ${roe}%: 해자 가능성`) : roe >= 12 ? add(1, `ROE ${roe}%`) : add(-1, `ROE ${roe}%로 평범한 사업`);
+        if (icNum(per) && per > 40) add(-1, `PER ${per.toFixed(1)}배는 지나침`);
+        if (icNum(per) && per <= 0) add(-2, "이익을 못 내는 사업");
+      }
+      if (an.chg60 < -20) add(-1, `60일 ${an.chg60}% 급락, 원인 확인 필요`);
+    } else if (id === "graham"){
+      if (noFund) add(0, "재무 데이터가 없어 판단 보류");
+      else {
+        if (icNum(per)) per <= 0 ? add(-2, "적자 기업은 제외") : per <= 15 ? add(1, `PER ${per.toFixed(1)}배 ≤ 15`) : per > 25 ? add(-1, `PER ${per.toFixed(1)}배 > 25`) : add(0, `PER ${per.toFixed(1)}배`);
+        if (icNum(pbr)) pbr <= 1.5 ? add(1, `PBR ${pbr.toFixed(2)}배 ≤ 1.5`) : pbr > 4 ? add(-1, `PBR ${pbr.toFixed(2)}배로 자산 대비 비쌈`) : add(0, `PBR ${pbr.toFixed(2)}배`);
+        if (icNum(per) && icNum(pbr) && per > 0 && per * pbr <= 22.5) add(1, `PER×PBR ${(per * pbr).toFixed(1)} ≤ 22.5 (그레이엄 기준 통과)`);
+        if (icNum(div) && div >= 2) add(1, `배당 ${div}%`);
+      }
+    } else if (id === "lynch"){
+      if (growth == null) add(0, "예상 이익 데이터가 없어 PEG 계산 불가");
+      else {
+        const peg = growth > 0 ? per / growth : null;
+        if (growth <= 0) add(-1, `예상 이익 감소(${growth.toFixed(0)}%)`);
+        else if (peg < 1) add(2, `PEG ${peg.toFixed(2)} < 1, 성장 대비 쌈`);
+        else if (peg < 1.5) add(1, `PEG ${peg.toFixed(2)}`);
+        else if (peg > 2.5) add(-1, `PEG ${peg.toFixed(2)}, 성장 대비 비쌈`);
+        else add(0, `PEG ${peg.toFixed(2)}`);
+        if (growth > 0) add(0, `예상 이익 성장 약 ${growth.toFixed(0)}%`);
+      }
+    } else if (id === "druck"){
+      const s = an.score;
+      s >= 70 ? add(2, `기술 점수 ${s}점, 추세 강함`) : s >= 57 ? add(1, `기술 점수 ${s}점`) : s <= 30 ? add(-2, `기술 점수 ${s}점, 추세 약함`) : s <= 43 ? add(-1, `기술 점수 ${s}점`) : add(0, `기술 점수 ${s}점, 방향 없음`);
+      if (an.chg60 > 15) add(1, `60일 +${an.chg60}%`); else if (an.chg60 < -15) add(-1, `60일 ${an.chg60}%`);
+      if (pos52 > 0.85) add(0, "52주 고점 근처"); else if (pos52 < 0.15) add(-1, "52주 저점 근처");
+    }
+    const sum = pts.reduce((a, [p]) => a + p, 0);
+    const signal = sum >= 2 ? "사자" : sum <= -1 ? "팔자" : "중립";
+    const known = pts.filter(([, w]) => !/보류|불가/.test(w)).length;
+    const confidence = known ? icClamp(Math.round(42 + Math.abs(sum) * 11 + known * 2), 35, 92) : 25;
+    return { id, signal, confidence, reasons: pts.map(([, w]) => w), score: sum };
+  }
+
+  function icNewsRows(sym){
+    const ni = NS.hit[sym];
+    const ext = ni?.n?.length ? ni.n.map(([t, b, src, time]) => ({ title: t, body: b, source: src, time })) : [];
+    const own = newsFor(sym);
+    const seen = new Set(), out = [];
+    ext.concat(own).sort((a, b) => (b.time || "").localeCompare(a.time || "")).forEach(n => { const k = (n.title || "").replace(/\W/g, "").slice(0, 30); if (k && !seen.has(k)){ seen.add(k); out.push(n); } });
+    return out.slice(0, 12);
+  }
+
+  async function icBase(sym){
+    const raw = DATA?.candles?.[sym] || await candlesAny(sym);
+    if (!raw || raw.length < 60) return null;
+    const bars = raw.map(r => ({ time: r[0], open: r[1], high: r[2], low: r[3], close: r[4], volume: r[5] }));
+    const an = TA.analyze(bars); if (!an) return null;
+    try { await newsInfo(sym); } catch {}
+    const fd = await icFund();
+    const f = fd?.kr?.[sym] || fd?.us?.[sym] || null;
+    const held = { buffett: !!PF?.investors?.buffett?.holdings?.some(h => h.sym === sym), cathie: !!PF?.investors?.cathie?.holdings?.some(h => h.sym === sym) };
+    const news = icNewsRows(sym);
+    const tones = news.map(n => toneOf(n.title).tone), g = tones.filter(t => t === "good").length, b = tones.filter(t => t === "bad").length;
+    const newsScore = news.length ? Math.round(icClamp(50 + (g - b) / news.length * 60, 5, 95)) : 50;
+    const roe = icNum(f?.roe) ? f.roe : icNum(f?.per) && icNum(f?.pbr) && f.per > 0 ? +(f.pbr / f.per * 100).toFixed(1) : null;
+    let finScore = 50; const finWhy = [];
+    if (f){
+      if (icNum(f.per)){ if (f.per <= 0){ finScore -= 25; finWhy.push("적자"); } else if (f.per <= 12){ finScore += 12; finWhy.push(`PER ${f.per.toFixed(1)}배(저평가 쪽)`); } else if (f.per > 35){ finScore -= 12; finWhy.push(`PER ${f.per.toFixed(1)}배(고평가 쪽)`); } else finWhy.push(`PER ${f.per.toFixed(1)}배`); }
+      if (roe != null){ if (roe >= 15){ finScore += 12; } else if (roe < 5){ finScore -= 10; } finWhy.push(`ROE ${roe}%`); }
+      if (icNum(f.per) && icNum(f.fper) && f.per > 0 && f.fper > 0){ const gr = (f.per / f.fper - 1) * 100; finScore += icClamp(gr / 3, -10, 12); finWhy.push(`예상 이익 ${gr >= 0 ? "+" : ""}${gr.toFixed(0)}%`); }
+      if (icNum(f.div) && f.div > 0) finWhy.push(`배당 ${f.div}%`);
+    } else finWhy.push("재무 데이터 없음(ETF·지수·코인 등)");
+    finScore = Math.round(icClamp(finScore, 5, 95));
+    let flowScore = 50; const flowWhy = [`거래량 20일 평균의 ${Math.round(an.volRatio * 100)}%`];
+    if (an.volRatio > 1.5) flowScore += an.chg20 >= 0 ? 15 : -15;
+    if (icNum(f?.frgn)){ flowWhy.push(`외국인 지분 ${f.frgn}%`); if (f.frgn >= 30) flowScore += 5; }
+    flowWhy.push(`20일 ${an.chg20 >= 0 ? "+" : ""}${an.chg20}%`); flowScore += icClamp(an.chg20, -15, 15);
+    flowScore = Math.round(icClamp(flowScore, 5, 95));
+    const analysts = [
+      { k: "기술 분석가", score: an.score, v: `${an.signal} · RSI ${an.rsi} · ${an.patterns[0] ? an.patterns[0].ko + " " + an.patterns[0].status : "뚜렷한 패턴 없음"}` },
+      { k: "뉴스·심리 분석가", score: newsScore, v: news.length ? `기사 ${news.length}건 · 호재 ${g} · 악재 ${b}` : "최근 기사 없음" },
+      { k: "재무 분석가", score: finScore, v: finWhy.join(" · ") },
+      { k: "수급 분석가", score: flowScore, v: flowWhy.join(" · ") },
+    ];
+    const people = IC_PEOPLE.map(p => ({ ...p, ...icPersona(p.id, f, an, p.id === "buffett" && held.buffett) }));
+    const vote = people.reduce((a, p) => a + (p.signal === "사자" ? 1 : p.signal === "팔자" ? -1 : 0) * p.confidence / 100, 0);
+    const teamAvg = analysts.reduce((a, x) => a + x.score, 0) / analysts.length;
+    const mix = icClamp(Math.round(teamAvg + vote * 8), 0, 100);
+    const stance = mix >= 62 ? "비중 늘리기" : mix >= 48 ? "유지" : mix >= 36 ? "비중 줄이기" : "현금 확보";
+    const cash = icClamp(Math.round(100 - mix * 1.1), 10, 90);
+    return { sym, an, f, held, news, analysts, people, rule: { mix, stance, cash } };
+  }
+
+  function icPrompt(B){
+    const sym = B.sym, an = B.an, cur = isKRW(sym) ? "원" : "달러";
+    const data = {
+      종목: nameOf(sym), 티커: sym, 통화: cur, 기준일: an.asOf, 종가: an.close, 등락률_20일: an.chg20 + "%", 등락률_60일: an.chg60 + "%",
+      고가_52주: an.high52, 저가_52주: an.low52, 이동평균: an.ma, RSI: an.rsi, MACD: an.macd, ATR: an.atr,
+      기술점수: an.score, 기술신호: an.signal, 지지: an.levels.support, 저항: an.levels.resistance,
+      패턴: an.patterns.slice(0, 3).map(p => `${p.ko} ${p.status} 신뢰도${p.confidence}`),
+      재무: B.f || "없음", 버크셔_13F_보유: B.held.buffett, ARK_보유: B.held.cathie,
+      분석가팀: B.analysts.map(a => `${a.k} ${a.score}점: ${a.v}`),
+      대가_규칙판정: B.people.map(p => `${p.ko}: ${p.signal} ${p.confidence}% (${p.reasons.join(", ")})`),
+      최근뉴스: B.news.slice(0, 8).map(n => `[${(n.time || "").slice(0, 10)}] ${n.title}`),
+    };
+    return `너는 가상의 헤지펀드 투자위원회를 진행하는 AI야. ai-hedge-fund와 TradingAgents 방식처럼 여러 역할이 한 종목을 검토해.
+아래 데이터만 근거로 써. 데이터에 없는 사실(실적 발표 내용, 루머 등)은 만들지 마. 숫자는 데이터에 있는 값 근처로 쓰고 통화(${cur})를 붙여.
+
+역할:
+1) 투자 대가 5명(buffett 워런 버핏, munger 찰리 멍거, graham 벤 그레이엄, lynch 피터 린치, druck 스탠리 드러켄밀러): 각자의 알려진 투자 철학으로 판단. 규칙판정을 참고하되 동의하지 않으면 바꿔도 돼. quote는 그 사람이 말할 법한 짧은 한 줄(실제 발언 인용 아님, 40자 이내).
+2) 강세 연구원과 약세 연구원이 각각 가장 강한 논거를 내고, 토론 결론에서 어느 쪽이 데이터로 더 뒷받침되는지 판정.
+3) 트레이더가 방향·시점·비중을 제안. 손절가와 목표가는 지지·저항 근처 숫자.
+4) 리스크 매니저가 공격·중립·보수 관점을 요약해 제안을 조정.
+5) 포트폴리오 매니저가 최종 결정: 이 종목을 담은 개인 계좌 기준 주식/현금 비율(cash 0~100).
+문장은 존댓말(~해요), 짧게. 확정적 표현 대신 조건으로 말해.
+
+아래 JSON 하나로만 답해:
+{"investors":[{"id":"buffett","signal":"사자|중립|팔자","confidence":0~100 정수,"quote":"한 줄","reason":"근거 1~2문장"}, …5명 모두],
+"bull":"강세 논거 2~3문장","bear":"약세 논거 2~3문장","debate":"토론 판정 1~2문장","debateWinner":"강세|약세|팽팽",
+"trader":{"action":"매수|분할 매수|관망|비중 축소|매도","timing":"진입 조건 1문장","size":"비중 제안 1문장","stop":숫자,"target":숫자},
+"risk":"리스크 검토 1~2문장","final":{"stance":"비중 늘리기|유지|비중 줄이기|현금 확보","cash":0~100 정수,"headline":"한 줄 결론(40자 이내)"}}
+
+데이터:
+${JSON.stringify(data)}`;
+  }
+
+  function icCanAI(){ return !!(SAMPLE || (API.ai && (!API.aiCode || aiCode()))); }
+
+  async function runIC(){
+    const sym = S.sel; if (!sym) return;
+    IC.ctl?.abort(); clearInterval(IC.timer);
+    Object.assign(IC, { sym, busy: false, base: null, ai: null, err: null, step: 0 });
+    $("#icPanel").hidden = false;
+    $("#icPanel").innerHTML = `<div class="ph"><h2>AI 투자위원회</h2><span class="ta-sub">${esc(nameOf(sym))} 데이터 모으는 중…</span></div><div class="pb"><span class="spin" aria-hidden="true"></span></div>`;
+    let B = null; try { B = await icBase(sym); } catch (e) { console.warn(e); }
+    if (IC.sym !== sym) return;
+    if (!B){ $("#icPanel").innerHTML = `<div class="ph"><h2>AI 투자위원회</h2><button type="button" class="icon-btn" data-ic="close">닫기</button></div><div class="pb"><p class="muted">이 종목은 일봉 데이터가 60일보다 짧아 위원회를 열 수 없어요.</p></div>`; return; }
+    IC.base = B; IC.step = 2; renderIC();
+    if (icCanAI()) askIC();
+  }
+  async function askIC(){
+    const B = IC.base; if (!B || IC.busy) return;
+    const sym = B.sym, ctl = new AbortController();
+    Object.assign(IC, { busy: true, ai: null, err: null, ctl, t0: Date.now(), step: 2 });
+    clearInterval(IC.timer);
+    IC.timer = setInterval(() => {
+      const sec = (Date.now() - IC.t0) / 1000; IC.step = icClamp(2 + Math.floor(sec / 8), 2, 5);
+      const el = $("#icWait"); if (el) el.textContent = Math.round(sec) + "초";
+      document.querySelectorAll("#icPanel [data-st]").forEach(li => { const i = +li.dataset.st; li.className = i < IC.step ? "done" : i === IC.step ? "run" : ""; li.querySelector("em").textContent = i < IC.step ? "완료" : i === IC.step ? "진행 중" : "대기"; });
+    }, 1000);
+    renderIC();
+    try {
+      const prompt = icPrompt(B);
+      const r = SAMPLE ? await SAMPLE.json(prompt, { signal: ctl.signal, modelTier: "default", cache: { gcTime: 30 * 60 * 1000 } }) : await serverAI(prompt, ctl.signal);
+      if (IC.sym !== sym) return;
+      if (!r || typeof r !== "object" || !Array.isArray(r.investors) || !r.final) throw { code: "invalid_json" };
+      IC.ai = r; IC.step = 6;
+    } catch (e) {
+      if (e?.name === "AbortError") e = { code: "cancelled" };
+      if (IC.sym === sym) IC.err = e?.code === "cancelled" ? "stopped" : (e?.code || "upstream_error");
+      if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(e?.code)) SAMPLE = null;
+    } finally {
+      clearInterval(IC.timer);
+      if (IC.sym === sym){ IC.busy = false; renderIC(); }
+    }
+  }
+  function hideIC(){ if (!IC) return; IC.ctl?.abort(); clearInterval(IC.timer); Object.assign(IC, { sym: null, base: null, ai: null, busy: false, err: null }); const p = $("#icPanel"); if (p){ p.hidden = true; p.innerHTML = ""; } }
+
+  function icDonut(cash){
+    const stock = 100 - cash, r = 34, C = 2 * Math.PI * r, s = C * stock / 100;
+    return `<svg class="ic-donut" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="${r}" class="d-bg"/><circle cx="45" cy="45" r="${r}" class="d-st" stroke-dasharray="${s} ${C - s}" transform="rotate(-90 45 45)"/><text x="45" y="43" text-anchor="middle" class="d-v">${cash}%</text><text x="45" y="58" text-anchor="middle" class="d-l">현금</text></svg>`;
+  }
+
+  function renderIC(){
+    const B = IC.base; if (!B) return;
+    const sym = B.sym, an = B.an, ai = IC.ai, c = an.close;
+    const aiP = id => ai?.investors?.find(x => x.id === id);
+    const steps = IC_STEPS.map((t, i) => { const st = ai ? "done" : !IC.busy ? (i < 2 ? "done" : "") : i < IC.step ? "done" : i === IC.step ? "run" : "";
+      return `<li data-st="${i}" class="${st}"><span>${esc(t)}</span><em>${st === "done" ? (i < 2 && !ai ? "규칙 계산" : "완료") : st === "run" ? "진행 중" : icCanAI() ? "대기" : "AI 필요"}</em></li>`; }).join("");
+    const team = B.analysts.map(a => `<li><span>${esc(a.k)}</span><b class="num ${a.score >= 57 ? "up" : a.score <= 43 ? "down" : ""}">${a.score}</b><small>${esc(a.v)}</small></li>`).join("");
+    const cards = B.people.map(p => { const v = aiP(p.id), sig = v?.signal || p.signal, conf = icNum(v?.confidence) ? v.confidence : p.confidence;
+      return `<article class="ic-card c-${icSigCls(sig)}">
+        <header><span class="mono">${p.mono}</span><div><b>${esc(p.ko)}</b><small>${esc(p.style)}</small></div><span class="ic-sig ${icSigCls(sig)}">${esc(sig)}</span></header>
+        <div class="ic-conf"><span>확신도</span><i><i style="width:${conf}%"></i></i><b class="num">${conf}%</b></div>
+        ${v?.quote ? `<p class="ic-quote">“${esc(v.quote)}”</p>` : `<p class="ic-quote muted">${esc(p.desc)}</p>`}
+        ${v?.reason ? `<p class="ic-why">${esc(v.reason)}</p>` : `<ul class="ic-rs">${p.reasons.slice(0, 4).map(r => `<li>${esc(r)}</li>`).join("")}</ul>`}
+        <span class="ic-src">${v ? "AI 해석" : "규칙 계산"}${p.id === "buffett" && B.held.buffett ? " · 버크셔 실제 보유" : ""}</span>
+      </article>`; }).join("");
+    const counts = ["사자", "중립", "팔자"].map(s => [s, B.people.filter(p => (aiP(p.id)?.signal || p.signal) === s).length]);
+    const fin = ai?.final || {}, cash = icNum(fin.cash) ? icClamp(Math.round(fin.cash), 0, 100) : B.rule.cash, stance = fin.stance || B.rule.stance;
+    const t = ai?.trader || {};
+    let aiPart;
+    if (ai){
+      aiPart = `<div class="ic-debate">
+          <section class="bull"><h4>강세 연구원</h4><p>${esc(ai.bull || "")}</p></section>
+          <section class="bear"><h4>약세 연구원</h4><p>${esc(ai.bear || "")}</p></section>
+        </div>
+        <p class="ic-verdict"><span class="vtag ${ai.debateWinner === "강세" ? "ok" : ai.debateWinner === "약세" ? "no" : ""}">토론 판정 · ${esc(ai.debateWinner || "")}</span> ${esc(ai.debate || "")}</p>
+        <div class="ic-trader">
+          <h4>트레이더 거래 제안 <span class="ic-sig ${icSigCls(t.action)}">${esc(t.action || "")}</span></h4>
+          <ul class="plan"><li><span>진입 조건</span><b>${esc(t.timing || "–")}</b></li><li><span>비중</span><b>${esc(t.size || "–")}</b></li>
+            <li><span>손절</span><b class="num">${icNum(t.stop) ? fmtPrice(t.stop, sym) + " " + fromClose(t.stop, c) : esc(t.stop || "–")}</b></li>
+            <li><span>목표</span><b class="num">${icNum(t.target) ? fmtPrice(t.target, sym) + " " + fromClose(t.target, c) : esc(t.target || "–")}</b></li></ul>
+        </div>
+        <p class="ic-risk"><b>리스크 관리</b> ${esc(ai.risk || "")}</p>`;
+    } else if (IC.busy){
+      aiPart = `<div class="ai-card wait"><div class="ai-head"><span class="ai-tag">위원회 회의 중</span><span class="spin" aria-hidden="true"></span><span>대가 의견·토론·거래 제안을 쓰는 중이에요 · <span class="num" id="icWait">0초</span></span><button type="button" class="icon-btn" data-ic="stop">멈추기</button></div>
+        <p class="muted">보통 30~90초 걸려요. 그 사이 위 카드는 규칙 계산 결과예요.</p></div>`;
+    } else if (icCanAI()){
+      aiPart = `<div class="ai-card"><div class="ai-head"><span class="ai-tag">AI 위원회</span><span>${IC.err ? esc(AI_ERR[IC.err] || "AI 답변을 받지 못했어요. 다시 시도해 주세요.") : "강세·약세 토론과 트레이더 제안은 AI가 써요."}</span><button type="button" class="ta-btn" data-ic="go">회의 시작</button></div></div>`;
+    } else {
+      aiPart = `<div class="ai-card"><div class="ai-head"><span class="ai-tag">AI 위원회</span><span>토론·거래 제안은 Claude 앱 안에서 열었을 때 AI로 작성돼요. 지금은 규칙 계산 결과만 보여드려요.</span></div></div>`;
+    }
+    $("#icPanel").innerHTML = `
+      <div class="ph"><h2>AI 투자위원회</h2><span class="ta-sub">${esc(nameOf(sym))} <span class="num">${esc(sym)}</span> · ${esc(an.asOf)} 종가 ${fmtPrice(c, sym)}</span>${ai ? `<button type="button" class="icon-btn" data-ic="again">다시 회의</button>` : ""}<button type="button" class="icon-btn" data-ic="close">닫기</button></div>
+      <div class="ic-top">
+        <section class="ic-final">
+          <span class="lab">포트폴리오 매니저 결론 <small>${ai ? "AI" : "규칙 계산"}</small></span>
+          <div class="ic-fin-row">${icDonut(cash)}<div><b class="ic-stance ${icSigCls(stance)}">${esc(stance)}</b><p>${esc(fin.headline || `분석가 평균과 대가 투표를 합친 점수 ${B.rule.mix}점이에요.`)}</p>
+            <p class="ic-vote">${counts.map(([s, n]) => `<span class="ic-sig ${icSigCls(s)}">${s} ${n}</span>`).join("")}</p></div></div>
+        </section>
+        <section><span class="lab">진행 상황</span><ol class="ic-steps">${steps}</ol></section>
+        <section><span class="lab">분석가 팀 <small>점수 0~100</small></span><ul class="ic-team">${team}</ul></section>
+      </div>
+      <div class="ta-sec"><span class="lab">투자 대가 5인 <small>각자의 투자 기준으로 판단</small></span><div class="ic-cards">${cards}</div></div>
+      <div class="ta-sec">${aiPart}</div>
+      <p class="ta-note">실험 기능이에요. 대가들의 실제 의견이 아니라 알려진 투자 철학을 흉내 낸 해석이고, 같은 데이터를 여러 관점으로 나눠 본 참고 자료예요. 투자 권유가 아니에요.</p>`;
+  }
+
+  
+  /* 기술적 분석 패널의 탭: 차트 분석 | 투자위원회 (위원회 AI는 탭을 눌렀을 때만 실행) */
+  function anTab(which){
+    const tabs = $("#anTabs"); tabs.hidden = false;
+    tabs.querySelectorAll("[data-at]").forEach(b => b.setAttribute("aria-selected", b.dataset.at === which));
+    if (which === "ta"){
+      if (TA_STATE.sym !== S.sel){ runTA(); return; }
+      $("#taPanel").hidden = false; $("#icPanel").hidden = true;
+    } else {
+      $("#taPanel").hidden = true; $("#icPanel").hidden = false;
+      if (IC.sym !== S.sel) runIC();
+    }
+  }
+  $("#anTabs").addEventListener("click", e => { const b = e.target.closest("[data-at]"); if (b) anTab(b.dataset.at); });
+
+  /* AI 애널리스트용: 매매 판단 질문이면 위원회 요약을 답변에 붙임 */
+  const IC_TRADE_RE = /사도|살까|사야|팔까|팔아|매수|매도|들어가|진입|담아|담을|정리할까|손절|물타|추매|비중|홀딩|버틸까|익절/;
+  function icMini(B){
+    const pick = p => ({ ko: p.ko, mono: p.mono, signal: p.signal, confidence: p.confidence, why: p.reasons[0] || "" });
+    return { sym: B.sym, name: nameOf(B.sym), people: B.people.map(pick), team: B.analysts.map(a => ({ k: a.k, score: a.score })), ...B.rule };
+  }
+  function icMiniHTML(m){
+    if (m.ic){
+      const x = m.ic, cnt = s => x.people.filter(p => p.signal === s).length;
+      return `<div class="op-card ic-mini"><div class="op-top"><span class="muted" style="font-size:12px">투자위원회 · 규칙 판정</span><b>${esc(x.name)}</b><span class="ic-sig ${icSigCls(x.stance)}" style="margin-left:auto">${esc(x.stance)} · 현금 ${x.cash}%</span></div>
+        <ul class="ic-mrows">${x.people.map(p => `<li><span class="mono">${p.mono}</span><b>${esc(p.ko)}</b><span class="ic-sig ${icSigCls(p.signal)}">${esc(p.signal)} ${p.confidence}%</span><small>${esc(p.why)}</small></li>`).join("")}</ul>
+        <p class="ic-mfoot"><span>사자 ${cnt("사자")} · 중립 ${cnt("중립")} · 팔자 ${cnt("팔자")}</span><span>분석가 팀 ${x.team.map(t => `${t.k.replace(" 분석가", "")} ${t.score}`).join(" · ")}</span></p>
+        <button type="button" class="ta-btn" data-ic-open="${esc(x.sym)}">강세·약세 토론과 거래 제안까지 보기 →</button></div>`;
+    }
+    if (m.icLink) return `<div class="ic-link"><button type="button" class="icon-btn" data-ic-open="${esc(m.icLink)}">이 종목 투자위원회 열기 (대가 5인 의견·토론) →</button></div>`;
+    return "";
+  }
+  $("#icPanel").addEventListener("click", e => {
+    const b = e.target.closest("[data-ic]"); if (!b) return;
+    const a = b.dataset.ic;
+    if (a === "close") hideTA();
+    else if (a === "stop") IC.ctl?.abort();
+    else if (a === "go") askIC();
+    else if (a === "again"){ IC.ai = null; askIC(); }
+  });
+
   $("#taPanel").addEventListener("submit", e => {
     if (e.target.id !== "aiCodeForm") return; e.preventDefault();
     const v = $("#aiCodeIn").value.trim(); if (!v) return;
@@ -3628,7 +4001,7 @@ ${JSON.stringify(data)}`;
       <ol>${m.steps.map(st => `<li>${esc(st.t)}<span>${st.ms != null ? st.ms + "ms" : "…"}</span></li>`).join("")}</ol></details>` : "";
     const wait = m.waiting ? `<div class="answer muted"><span class="spin" aria-hidden="true" style="display:inline-block;vertical-align:-2px"></span> 답변 준비 중 · <span class="num" id="chatWait">0초</span></div>` : "";
     const chips = m.chips?.length && idx === CHAT.msgs.length - 1 && !CHAT.busy ? `<div class="chips">${m.chips.map(q => `<button type="button" class="chip-q" data-chat-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : "";
-    return `<div class="msg-a"><span class="who">&gt;_ AI 애널리스트</span>${steps}${m.picks ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">추천 후보</span><b>${esc(m.picks.title)}</b><small>상위 ${m.picks.list.length}개</small></div><div class="pk-list compact">${m.picks.list.map((x, i) => pkCard(x, i, true)).join("")}</div></div>` : ""}${mktCardHTML(m.mcard)}${cardHTML(m.card)}${m.etf ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">ETF 구성종목 분석</span><b>${esc(m.etf.name || "")}</b></div>${etfHTML(m.etf, false)}</div>` : ""}${vizCardHTML(m.viz)}${m.text ? `<div class="answer">${mdLite(m.text)}</div>` : ""}${newsCardHTML(m.news)}${m.note ? `<div class="answer"><p class="muted">${esc(m.note)}</p></div>` : ""}${wait}${chips}</div>`;
+    return `<div class="msg-a"><span class="who">&gt;_ AI 애널리스트</span>${steps}${m.picks ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">추천 후보</span><b>${esc(m.picks.title)}</b><small>상위 ${m.picks.list.length}개</small></div><div class="pk-list compact">${m.picks.list.map((x, i) => pkCard(x, i, true)).join("")}</div></div>` : ""}${mktCardHTML(m.mcard)}${cardHTML(m.card)}${icMiniHTML(m)}${m.etf ? `<div class="op-card"><div class="op-top"><span class="muted" style="font-size:12px">ETF 구성종목 분석</span><b>${esc(m.etf.name || "")}</b></div>${etfHTML(m.etf, false)}</div>` : ""}${vizCardHTML(m.viz)}${m.text ? `<div class="answer">${mdLite(m.text)}</div>` : ""}${newsCardHTML(m.news)}${m.note ? `<div class="answer"><p class="muted">${esc(m.note)}</p></div>` : ""}${wait}${chips}</div>`;
   }
   function renderChat(){
     const log = $("#chatLog");
@@ -3781,6 +4154,15 @@ ${JSON.stringify(ctx)}
           비중기준_60일선위_퍼센트: m.etf.breadth, 구성종목_20일_가중수익률: m.etf.ret20, 상위3종목_비중: m.etf.top3, 분석가능비중: m.etf.cover, 레버리지_인버스: m.etf.lev,
           근거: m.etf.reasons, 구성종목: m.etf.rows.map(r => `${r.name}(${r.sym}) 비중${r.w}% 점수${r.score ?? "없음"} 20일${r.chg20 ?? "–"}% ${r.up60 == null ? "" : r.up60 ? "60일선위" : "60일선아래"}`), 기준일: m.etf.asOf, 출처: m.etf.src }
           : "구성종목 자료 없음 (ETF 자체 차트만 분석)";
+        if (IC_TRADE_RE.test(q) && !isETF(e.sym)){
+          const B = await step("투자위원회 소집 (분석가 팀·대가 5인 규칙 판정)", () => icBase(e.sym).catch(() => null));
+          if (B){
+            m.ic = icMini(B);
+            if (B.f) ctx.재무데이터 = B.f;
+            ctx.투자위원회_규칙판정 = { 분석가팀: B.analysts.map(a => `${a.k} ${a.score}점: ${a.v}`), 대가: B.people.map(p => `${p.ko}(${p.style}): ${p.signal} ${p.confidence}% - ${p.reasons.join(", ")}`),
+              종합: `${B.rule.stance}, 권장 현금비율 ${B.rule.cash}%`, 설명: "대가 의견은 알려진 투자 철학을 흉내 낸 규칙 계산이며 실제 발언이 아님. 답변에서 위원회 결과와 기술적 분석이 엇갈리면 그 이유를 짚어 줘." };
+          }
+        } else if (!isETF(e.sym)) m.icLink = e.sym;
         if (wantMkt) await step("시장 지표 확인 (지수 추세·VIX·금리·환율)", () => loadMarketHist(true));
         const reg = marketRegime();
         if (reg){ ctx.시장국면 = mktCtx(reg); if (wantMkt) m.mcard = reg; }
@@ -3860,6 +4242,8 @@ ${JSON.stringify(ctx)}
   $("#chatNew").addEventListener("click", () => { if (CHAT.busy) CHAT.ctl?.abort(); CHAT.msgs = []; CHAT.sym = null; saveChat(); renderChat(); });
   $("#chatLog").addEventListener("click", async e => {
     const qb = e.target.closest("[data-chat-q]"); if (qb){ ask(qb.dataset.chatQ); return; }
+    const io = e.target.closest("[data-ic-open]");
+    if (io){ const sym = io.dataset.icOpen; if (!DATA.candles[sym]) return; await openStockPage(sym); anTab("ic"); requestAnimationFrame(() => $("#anTabs").scrollIntoView({ behavior: "smooth", block: "start" })); return; }
     const ab = e.target.closest("[data-chat-act='chart']");
     if (ab){
       const sym = ab.dataset.sym, msg = [...CHAT.msgs].reverse().find(x => x.card?.sym === sym);
@@ -4067,3 +4451,4 @@ JSON 하나로만 답해: {"related":[{"name":"회사명(한국어)","ticker":""
 </script>
 </body>
 </html>
+
