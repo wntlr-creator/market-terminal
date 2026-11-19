@@ -50,12 +50,13 @@ jobs:
           while :; do
             t0=$(date +%s); n=$((n+1))
             echo "::group::갱신 $n ($(TZ=Asia/Seoul date '+%H:%M'))"
-            python fetch_data.py || echo "fetch_data 실패"
-            python build_quotes.py || echo "build_quotes 실패"
+            # 응답 없는 서버 때문에 반복 전체가 멈추지 않도록 단계마다 시간 제한
+            timeout -k 10 300 python fetch_data.py || echo "fetch_data 실패/시간초과"
+            timeout -k 10 200 python build_quotes.py || echo "build_quotes 실패/시간초과"
             git add docs/data.json docs/quotes.json 2>/dev/null || true
             if ! git diff --cached --quiet; then
               git commit -qm "data: $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
-              for i in 1 2 3 4; do git pull -q --rebase -X theirs && git push -q && break; sleep 7; done
+              for i in 1 2 3 4; do timeout 60 git pull -q --rebase -X theirs && timeout 60 git push -q && break; git rebase --abort 2>/dev/null; sleep 7; done
             fi
             echo "::endgroup::"
             market_open || { echo "장 마감 — 종료"; break; }
@@ -66,5 +67,5 @@ jobs:
             fi
             # 다음 갱신까지 대기 (시작 기준 10분 간격)
             wait=$(( 600 - ($(date +%s) - t0) )); [ $wait -gt 0 ] && sleep $wait
-            git pull -q --rebase -X theirs || true
+            timeout 60 git pull -q --rebase -X theirs || git rebase --abort 2>/dev/null || true
           done
