@@ -137,6 +137,7 @@
 "JPM-PC": null,
 "JPM-PD": null,
 "KDP": "KDP.O",
+"KEY": "KEY",
 "KHC": "KHC",
 "KLAC": "KLAC.O",
 "KLAR": "KLAR.K",
@@ -158,6 +159,7 @@
 "MDT": "MDT",
 "META": "META.O",
 "MFG": "MFG",
+"MNST": "MNST.O",
 "MO": "MO",
 "MRK": "MRK",
 "MRVL": "MRVL.O",
@@ -289,5 +291,6 @@
 "XOM": "XOM",
 "XPEV": "XPEV.K",
 "ZFSVF": null,
+"ZS": "ZS.O",
 "ZURVY": null
 }
